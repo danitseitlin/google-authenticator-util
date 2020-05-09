@@ -64,8 +64,8 @@ const authenticator = new GoogleAuthenticator({
     username: 'your email address username (before the @)', //only needed for first authentication
     password: 'your email address password' //only needed for first authentication
 });
-Now the authenticator variable holds the oAuth2 object you need.
 ```
+Now the authenticator variable holds the oAuth2 object you need.
 
 ## GMAIL Client
 You can use the GMAIL Client used in the module, in order to perform your async actions:
@@ -77,7 +77,6 @@ const messages = await gmail.users.messages.list({
     auth: authenticator.getAuth2Client(),
     q: `subject: ${parameters.subject}`
 });
-
 ```
 Or you can use the original gmail client:
 ```
