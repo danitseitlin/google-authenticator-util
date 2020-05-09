@@ -2,7 +2,7 @@
 ## How to setup
 ### Create a google oAuth2 credentials
 1. Go to https://console.developers.google.com/apis/credentials, and under your project create the oAuth2 credentials with
-an Authorised redirect URI of `http://mydomain/oauth2callback` (Recommended is `http://localhost:port/oauth2callback`)
+an Authorised redirect URI of `http://mydomain/oauth2callback` (Recommended is `http://localhost:port/oauth2callback`) And type of `Web application`
 2. Download the credentials after creation, in order to re-use later in the code.
 
 ### First token generation
