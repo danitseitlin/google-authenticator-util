@@ -143,6 +143,20 @@ export class GoogleAuthenticator {
     }
 
     /**
+     * Returning the GMAIL API client
+     */
+    getGmailClient(): gmail_v1.Gmail {
+        return this.gmailAPI;
+    }
+
+    /**
+     * Returning the oAuth2 client
+     */
+    getAuth2Client(): OAuth2Client {
+        return this.oAuth2Client
+    }
+
+    /**
      * Authenticating the first token using the google UI
      * @param authUrl The authentication URL
      */
