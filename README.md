@@ -12,10 +12,11 @@ The following code will do it for you:
 const authenticator = new GoogleAuthenticator({
     clientId: 'your client ID',
     clientSecret: 'your client secret',
-    scopes: ['scope 1', 'scope 2'],
+    scope: ['scope 1', 'scope 2'],
     username: 'your email address username (before the @)',
     password: 'your email address password'
 });
+const oAuth2 = await authenticator.authorize();
 ```
 After the first execution of the code, the token will be generated in `tokens` folder by default and with a name of `your-client-id-token.json`.
 After the token is generated, it is **recommended** to remove the username and password parameters, they are no longer necessary.
@@ -29,8 +30,9 @@ Your code should look like:
 const authenticator = new GoogleAuthenticator({
     clientId: 'your client ID',
     clientSecret: 'your client secret',
-    scopes: ['scope 1', 'scope 2']
+    scope: ['scope 1', 'scope 2']
 });
+const oAuth2 = await authenticator.authorize();
 ```
 ### Existing token JS object
 If you don't want to store a token file, you can always re-use the existing token as a JS object inside the code:
@@ -38,7 +40,7 @@ If you don't want to store a token file, you can always re-use the existing toke
 const authenticator = new GoogleAuthenticator({
     clientId: 'your client ID',
     clientSecret: 'your client secret',
-    scopes: ['scope 1', 'scope 2'],
+    scope: ['scope 1', 'scope 2'],
 },{
     tokenOptions: {
         token: {
@@ -50,6 +52,7 @@ const authenticator = new GoogleAuthenticator({
         }
     }
 });
+const oAuth2 = await authenticator.authorize();
 ```
 Now you can remove the generated token file and keep authenticating.
 
@@ -60,31 +63,48 @@ To get a built oAuth2 Client without knowing too much, do the following in your 
 const authenticator = new GoogleAuthenticator({
     clientId: 'your client ID',
     clientSecret: 'your client secret',
-    scopes: ['scope 1', 'scope 2'],
+    scope: ['scope 1', 'scope 2'],
     username: 'your email address username (before the @)', //only needed for first authentication
     password: 'your email address password' //only needed for first authentication
 });
+const oAuth2 = await authenticator.authorize();
 ```
-Now the authenticator variable holds the oAuth2 object you need.
+Now the oAuth2 variable holds the oAuth2 object you need.
 
 ## GMAIL Client
 You can use the GMAIL Client used in the module, in order to perform your async actions:
 ```
+const authenticator = new GoogleAuthenticator({
+    clientId: 'your client ID',
+    clientSecret: 'your client secret',
+    scope: ['scope 1', 'scope 2'],
+    username: 'your email address username (before the @)', //only needed for first authentication
+    password: 'your email address password' //only needed for first authentication
+});
+const oAuth2 = await authenticator.authorize();
 const gmail = authenticator.getGmailClient();
 const messages = await gmail.users.messages.list({
     userId: 'me',
     labelIds: parameters.labelIds,
-    auth: authenticator.getAuth2Client(),
+    auth: oAuth2,
     q: `subject: ${parameters.subject}`
 });
 ```
 Or you can use the original gmail client:
 ```
+const authenticator = new GoogleAuthenticator({
+    clientId: 'your client ID',
+    clientSecret: 'your client secret',
+    scope: ['scope 1', 'scope 2'],
+    username: 'your email address username (before the @)', //only needed for first authentication
+    password: 'your email address password' //only needed for first authentication
+});
+const oAuth2 = await authenticator.authorize();
 const gmail = google.gmail('v1');
 const messages = await gmail.users.messages.list({
     userId: 'me',
     labelIds: parameters.labelIds,
-    auth: authenticator.getAuth2Client(),
+    auth: oAuth2,
     q: `subject: ${parameters.subject}`
 });
 ```
