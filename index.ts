@@ -5,7 +5,7 @@ import { OAuth2Client } from 'googleapis-common';
 import { Credentials } from 'google-auth-library';
 import * as express from 'express';
 import { createServer, Server } from 'http';
-import * as puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer-core';
 
 export class GoogleAuthenticator {
     private tokenDirectory = './tokens/';
@@ -127,17 +127,20 @@ export class GoogleAuthenticator {
             auth: this.oAuth2Client,
             q: `subject: ${parameters.subject}`
         };
-        const messages = await this.gmailAPI.users.messages.list(messagesParameters);
-        for(const messageObject of messages.data.messages) {
-            const message = await this.gmailAPI.users.messages.get({
-                userId: 'me',
-                auth: this.oAuth2Client,
-                id: messageObject.id,
-                format: 'raw'
-            });
-            //Converting the raw email message to HTML string
-            message.data.raw = Buffer.from(message.data.raw, 'base64').toString('ascii');
-            emails.push(message.data);
+        const messagesResponse = await this.gmailAPI.users.messages.list(messagesParameters);
+        //Verifying we have at least 1 response
+        if(messagesResponse.data.resultSizeEstimate > 0) {
+            for(const message of messagesResponse.data.messages) {
+                const messageResponse = await this.gmailAPI.users.messages.get({
+                    userId: 'me',
+                    auth: this.oAuth2Client,
+                    id: message.id,
+                    format: 'raw'
+                });
+                //Converting the raw email message to HTML string
+                messageResponse.data.raw = Buffer.from(messageResponse.data.raw, 'base64').toString('ascii');
+                emails.push(messageResponse.data);
+            }
         }
         return emails;
     }
@@ -161,7 +164,9 @@ export class GoogleAuthenticator {
      * @param authUrl The authentication URL
      */
     private async authenticateToken(authUrl: string): Promise<void> {
-        const browser = await puppeteer.launch({headless: false});
+        const browserFetcher = puppeteer.createBrowserFetcher();
+        const revisionInfo = await browserFetcher.download('737027');
+        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: false});
         const page = await browser.newPage();
 
         //UI authentication when there is no access token.
@@ -176,13 +181,14 @@ export class GoogleAuthenticator {
         await page.click('#passwordNext');
         await new Promise(resolve => setTimeout(resolve, 5000));
         await browser.close();
-        this.debug(`Waiting for token generation process to be finished`) 
+        this.debug(`Waiting for token generation process to be finished`)
+        await browserFetcher.remove(revisionInfo.revision);
     }
 
     /**
      * Configurating the Google Authenticator class properties
      */
-    private configure(): void{
+    private configure(): void {
         //Configuring token path
         if(this.tokenOptions !== undefined && this.tokenOptions.directory !== undefined) this.tokenDirectory = this.tokenOptions.directory;
         this.tokenPath = `${this.tokenDirectory}${this.authenticationOptions.clientId}-token.json`;
