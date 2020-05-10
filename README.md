@@ -4,6 +4,7 @@
 1. Go to https://console.developers.google.com/apis/credentials, and under your project create the oAuth2 credentials with
 an Authorised redirect URI of `http://mydomain/oauth2callback` (Recommended is `http://localhost:port/oauth2callback`) And type of `Web application`
 2. Download the credentials after creation, in order to re-use later in the code.
+3. Authorize your third party app to have access to your project, you need to only do it once.
 
 ### First token generation
 In the first time, you don't have a token at all and you will to verify the auth URL using a browser.
