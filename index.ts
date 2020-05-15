@@ -13,11 +13,12 @@ export class GoogleAuthenticator {
     private redirectURI: string;
     private isTokenGenerated: boolean = true;
     private authServer: Server;
-    private oAuth2Client: OAuth2Client;
-    private gmailAPI: gmail_v1.Gmail;
+    public oAuth2Client: OAuth2Client;
+    public gmailAPI: gmail_v1.Gmail;
     private redirectURIOptions: RedirectURIOptions;
     private debugOptions: DebugOptions;
     private tokenOptions: TokenOptions;
+    private authenticationType: AuthenticationType;
     
     /**
      * Initializing the Google Authenticator object
@@ -39,7 +40,7 @@ export class GoogleAuthenticator {
      * @param options.debugOptions.debug Is debug enabled
      * @param options.debugOptions.debugger The debugger of the debug printing
      */
-    constructor(private authenticationOptions: AuthenticationOptions, options?: Options) {
+    constructor(private authenticationOptions: AuthenticationOptions | TokenFileAuthentication | TokenAuthentication, options?: Options) {
         if(options !== undefined && options.redirectURIOptions !== undefined)
             this.redirectURIOptions = options.redirectURIOptions;
         if(options !== undefined && options.debugOptions !== undefined)
@@ -60,11 +61,11 @@ export class GoogleAuthenticator {
             this.debug('Authorizing with access token');
             let token: Credentials | Token;
             //If the token wasn't passed, we will always try and read the token from the token json file
-            if(this.tokenOptions === undefined || (this.tokenOptions !== undefined && this.tokenOptions.token === undefined)) {
+            if(this.authenticationType !== 'token-authentication') {
                 await this.verifyDirectory();
                 token = JSON.parse(await promises.readFile(this.tokenPath, 'utf8'));
             }
-            else token = this.tokenOptions.token;
+            else token = this.authenticationOptions.token;
             this.debug(`Setting the credentials with token: ${JSON.stringify(token)}`)
             //Setting the oAuth2 credentials using the token
             this.oAuth2Client.setCredentials(token);
@@ -189,16 +190,38 @@ export class GoogleAuthenticator {
      * Configurating the Google Authenticator class properties
      */
     private configure(): void {
+        //Determine the type of authentication
+        if(this.authenticationOptions.token !== undefined) this.authenticationType = 'token-authentication';
+        else if(this.authenticationOptions.username !== undefined) this.authenticationType = 'token-file-authentication';
+        else this.authenticationType = 'first-token-authentication';
+
         //Configuring token path
-        if(this.tokenOptions !== undefined && this.tokenOptions.directory !== undefined) this.tokenDirectory = this.tokenOptions.directory;
-        this.tokenPath = `${this.tokenDirectory}${this.authenticationOptions.clientId}-token.json`;
+        // if(this.tokenOptions !== undefined && this.tokenOptions.directory !== undefined) this.tokenDirectory = this.tokenOptions.directory;
+        // this.tokenPath = `${this.tokenDirectory}${this.authenticationOptions.clientId}-token.json`;
+        if(this.authenticationType === 'token-file-authentication') {
+            let tmpTokenPrefix = this.authenticationOptions.clientId;
+            let tmpTokenDirectory = './tokens/'
+            if(this.authenticationOptions.tokenDirectory !== undefined) tmpTokenDirectory = this.authenticationOptions.tokenDirectory;
+            if(this.authenticationOptions.tokenPrefix !== undefined) tmpTokenPrefix = this.authenticationOptions.tokenPrefix;
+            this.tokenDirectory = tmpTokenDirectory;
+            this.tokenPath = `${this.tokenDirectory}${tmpTokenPrefix}-token.json`;
+        }
         
+        if(this.authenticationType === 'first-token-authentication' && this.authenticationOptions.redirectURIOptions !== undefined) {
+            const tmpRedirectURIOptions = { protocol: 'http', domain: 'localhost', port: 3000, path: '/oauth2callback' };
+            const redirectURI: RedirectURIOptions = this.authenticationOptions.redirectURIOptions; 
+            if(redirectURI.protocol !== undefined) tmpRedirectURIOptions.protocol = redirectURI.protocol;
+            if(redirectURI.domain !== undefined) tmpRedirectURIOptions.domain = redirectURI.domain;
+            if(redirectURI.port !== undefined) tmpRedirectURIOptions.port = redirectURI.port;
+            if(redirectURI.path !== undefined) tmpRedirectURIOptions.path = redirectURI.path;
+            this.authenticationOptions.redirectURIOptions = tmpRedirectURIOptions;
+        }
         //Configuring Redirect URI
-        if(this.redirectURIOptions === undefined) 
-            this.redirectURIOptions = { protocol: 'http', domain: 'localhost', port: 3000, path: '/oauth2callback' }
-        this.redirectURI = `${this.redirectURIOptions.protocol}://${this.redirectURIOptions.domain}`;
-        if(this.redirectURIOptions.protocol !== undefined) this.redirectURI += `:${this.redirectURIOptions.port}`;
-        this.redirectURI += this.redirectURIOptions.path;
+        // if(this.redirectURIOptions === undefined) 
+        //     this.redirectURIOptions = { protocol: 'http', domain: 'localhost', port: 3000, path: '/oauth2callback' }
+        // this.redirectURI = `${this.redirectURIOptions.protocol}://${this.redirectURIOptions.domain}`;
+        // if(this.redirectURIOptions.protocol !== undefined) this.redirectURI += `:${this.redirectURIOptions.port}`;
+        // this.redirectURI += this.redirectURIOptions.path;
         
         //Configuring debug options
         if(this.debugOptions === undefined) this.debugOptions = { debug: false, debugger: console.log };
@@ -236,13 +259,32 @@ export class GoogleAuthenticator {
  * @param username The authentication username
  * @param password The authentication password
  */
-export interface AuthenticationOptions {
+
+export interface BasicAuthentication {
     clientId: string, 
-    clientSecret: string, 
-    scope: string[]
-    username?: string,
-    password?: string
+    clientSecret: string
 }
+
+export interface AuthenticationOptions extends BasicAuthentication {
+    scope: string[]
+    username: string,
+    password: string,
+    redirectURIOptions?: RedirectURIOptions
+    [key: string]: any
+}
+
+export interface TokenFileAuthentication extends BasicAuthentication{
+    tokenPrefix?: string,
+    tokenDirectory?: string
+    [key: string]: any
+}
+
+export interface TokenAuthentication extends BasicAuthentication { 
+    token: Token
+    [key: string]: any
+}
+
+export type AuthenticationType = 'first-token-authentication' | 'token-file-authentication' | 'token-authentication';
 
 /**
  * The parameters to configure class options
@@ -264,10 +306,10 @@ export interface Options {
  * @param path The path of the RedirectURI
  */
 export interface RedirectURIOptions {
-    protocol: string,
-    domain: string,
+    protocol?: string,
+    domain?: string,
     port?: number,
-    path: string
+    path?: string
 }
 
 /**
