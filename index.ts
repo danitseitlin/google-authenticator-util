@@ -8,106 +8,127 @@ import { createServer, Server } from 'http';
 import * as puppeteer from 'puppeteer-core';
 
 export class GoogleAuthenticator {
-    private tokenDirectory = './tokens/';
-    private tokenPath: string;
-    private redirectURI: string;
+    private clientId: string
+    private clientSecret: string
     private isTokenGenerated: boolean = true;
     private authServer: Server;
-    private oAuth2Client: OAuth2Client;
-    private gmailAPI: gmail_v1.Gmail;
-    private redirectURIOptions: RedirectURIOptions;
-    private debugOptions: DebugOptions;
-    private tokenOptions: TokenOptions;
-    
+    public oAuth2Client: OAuth2Client;
+    public gmailAPI: gmail_v1.Gmail;
+    private debugOptions: DebugOptions = { debug: false, debugger: console.log };
     /**
      * Initializing the Google Authenticator object
      * @param authenticationOptions The parameters to configure the authentication to Google
      * @param authenticationOptions.clientId The authentication client ID
      * @param authenticationOptions.clientSecret The authentication client secret
-     * @param authenticationOptions.scope The authentication scope
-     * @param authenticationOptions.username The authentication username
-     * @param authenticationOptions.password The authentication password
-     * @param options.redirectURIOptions Optional. The parameters to configure the redirectURI
-     * @param options.redirectURIOptions.protocol The protocol of the redirectURI
-     * @param options.redirectURIOptions.domain The domain of the redirectURI
-     * @param options.redirectURIOptions.port The port of the redirectURI
-     * @param options.redirectURIOptions.path The path of the RedirectURI
-     * @param options.tokenOptions Optional. The parameters to configure the token options
-     * @param options.tokenOptions.directory The directory of the token
-     * @param options.tokenOptions.token The token object
      * @param options.debugOptions Optional. The parameters to configure the debug logging
      * @param options.debugOptions.debug Is debug enabled
      * @param options.debugOptions.debugger The debugger of the debug printing
      */
-    constructor(private authenticationOptions: AuthenticationOptions, options?: Options) {
-        if(options !== undefined && options.redirectURIOptions !== undefined)
-            this.redirectURIOptions = options.redirectURIOptions;
+    constructor(authenticationOptions: BasicAuthentication, options?: Options) {
+        this.clientId = authenticationOptions.clientId;
+        this.clientSecret = authenticationOptions.clientSecret;
+        this.gmailAPI = google.gmail('v1');
+        this.oAuth2Client = new google.auth.OAuth2(this.clientId, this.clientSecret);
         if(options !== undefined && options.debugOptions !== undefined)
             this.debugOptions = options.debugOptions;
-        if(options !== undefined && options.tokenOptions !== undefined)
-            this.tokenOptions = options.tokenOptions;
-
-        this.configure();
-        this.gmailAPI = google.gmail('v1');
-        this.oAuth2Client = new google.auth.OAuth2(this.authenticationOptions.clientId, this.authenticationOptions.clientSecret, this.redirectURI);
+    } 
+    
+    /**
+     * Authorizing a google account with a new token
+     * @param options The new token authentication parameters
+     * @param options.username Required. The gmail username
+     * @param options.password Required. The gmail password
+     * @param options.scope Required. The authentication scope
+     * @param options.redirectURI Optional. The configuration of the redirect URI
+     * @param options.tokenName Optional. The name of the token
+     * @param options.tokenDirectory Optional. The directory of the token
+     */
+    async authorizeWithNewToken(options: NewTokenAuthentication) {
+        try {
+            const configuratedOptions = this.configure(options);
+            this.oAuth2Client = new google.auth.OAuth2(this.clientId, this.clientSecret, configuratedOptions.redirectURI);
+            this.debug('Authorizing with access token');
+            await this.generateToken(configuratedOptions);
+            return this.oAuth2Client;
+        }
+        catch(error) {
+            throw new Error(error);
+        }
     }
 
     /**
-     * Authorizing the Google user
+     * Authorizing a google account with an existing token file
+     * @param options The token file authentication parameters
+     * @param options.name The name of the token
+     * @param options.directory The directory of the token
      */
-    async authorize(): Promise<OAuth2Client> {
+    async authorizeWithTokenFile(options: TokenFileAuthentication): Promise<OAuth2Client> {
         try {
-            this.debug('Authorizing with access token');
-            let token: Credentials | Token;
-            //If the token wasn't passed, we will always try and read the token from the token json file
-            if(this.tokenOptions === undefined || (this.tokenOptions !== undefined && this.tokenOptions.token === undefined)) {
-                await this.verifyDirectory();
-                token = JSON.parse(await promises.readFile(this.tokenPath, 'utf8'));
-            }
-            else token = this.tokenOptions.token;
-            this.debug(`Setting the credentials with token: ${JSON.stringify(token)}`)
-            //Setting the oAuth2 credentials using the token
+            let directory = options.directory;
+            if(directory[directory.length - 1] !== '/') directory += '/';
+            const name = `${options.name}.json`;
+            const token = JSON.parse(await promises.readFile(directory + name, 'utf8'));
             this.oAuth2Client.setCredentials(token);
             return this.oAuth2Client;
         }
         catch(error) {
-            if(this.authenticationOptions.password === undefined || this.authenticationOptions.username === undefined)
-                throw new Error('Cannot obtain first token without username and password');
-            return await this.generateToken();
+            throw new Error(error);
         }
     }
 
     /**
-     * Generating a new token
+     * Authorizing using a token
+     * @param token The token
      */
-    async generateToken(): Promise<OAuth2Client> {
+    async authorizeWithToken(token: Token): Promise<OAuth2Client> {
+        try {
+            this.oAuth2Client.setCredentials(token);
+            return this.oAuth2Client;
+        }
+        catch(error) {
+            throw new Error(error);
+        }
+    }
+
+    /**
+     * Generating a new oAuth2 token
+     * @param options The generate token parameters
+     * @param options.username The email address username
+     * @param options.password The email address password
+     * @param options.scope The authorization scope
+     * @param options.tokenName The name of the token
+     * @param options.tokenDirectory The directory of the token
+     * @param options.redirectURI The full redirectURI
+     * @param options.redirectURIOptions The redirectURI options
+     */
+    async generateToken(options: GenerateTokenParameters): Promise<OAuth2Client> {
+        const handler = express();
+        const scope = this;
         this.debug('Retrieving a new token');
         const authUrl = this.oAuth2Client.generateAuthUrl({
             access_type: 'offline',
-            scope: this.authenticationOptions.scope,
+            scope: options.scope,
         });
         this.debug(`Generating new auth URL: ${authUrl}`);
         this.isTokenGenerated = false;
-        const handler = express();
-        const scope = this;
-        handler.get(this.redirectURIOptions.path, async function (req, res) {
+        handler.get(options.redirectURIOptions.path, async function (req, res) {
             scope.debug(`Getting a new token with code ${res.req.query.code}`)
             scope.oAuth2Client.getToken((res.req.query.code).toString(), async (err, token) => {
                 if (err) return scope.debug(`Error retrieving access token ${err}`);
                 scope.debug(`Setting the token as ${JSON.stringify(token)}`);
                 scope.oAuth2Client.setCredentials(token);
                 // Store the token to disk for later program executions
-                
-                await promises.writeFile(scope.tokenPath, JSON.stringify(token));
+                await scope.verifyDirectory(options.tokenDirectory);
+                await promises.writeFile(options.tokenFullPath, JSON.stringify(token));
                 scope.isTokenGenerated = true;
                 scope.authServer.close();
                 scope.debug('Killing the mock server....')
             });
         });
-        this.debug(`Creating a mock server on port ${this.redirectURIOptions.port}, domain: ${this.redirectURIOptions.domain}`);
-        this.authServer = createServer(handler).listen(this.redirectURIOptions.port, this.redirectURIOptions.domain);  
+        this.debug(`Creating a mock server on port ${options.redirectURIOptions.port}, domain: ${options.redirectURIOptions.domain}`);
+        this.authServer = createServer(handler).listen(options.redirectURIOptions.port, options.redirectURIOptions.domain);  
         this.debug(`Authenticating to get the first token`)
-        await this.authenticateToken(authUrl);
+        await this.authenticateToken(authUrl, options.username, options.password);
         await new Promise(resolve => setTimeout(resolve, 5000));
         this.debug(`Token generation process is ${this.isTokenGenerated}`)
         return this.oAuth2Client;
@@ -146,24 +167,12 @@ export class GoogleAuthenticator {
     }
 
     /**
-     * Returning the GMAIL API client
-     */
-    getGmailClient(): gmail_v1.Gmail {
-        return this.gmailAPI;
-    }
-
-    /**
-     * Returning the oAuth2 client
-     */
-    getAuth2Client(): OAuth2Client {
-        return this.oAuth2Client
-    }
-
-    /**
      * Authenticating the first token using the google UI
      * @param authUrl The authentication URL
+     * @param username The email address username
+     * @param password The email address password
      */
-    private async authenticateToken(authUrl: string): Promise<void> {
+    private async authenticateToken(authUrl: string, username: string, password: string): Promise<void> {
         const browserFetcher = puppeteer.createBrowserFetcher();
         const revisionInfo = await browserFetcher.download('737027');
         const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: false});
@@ -172,11 +181,11 @@ export class GoogleAuthenticator {
         //UI authentication when there is no access token.
         await page.goto(authUrl);
         await page.waitForSelector('input[type=email]', {visible: true});
-        await page.type('input[type=email]', this.authenticationOptions.username);
+        await page.type('input[type=email]', username);
         await page.waitForSelector('#identifierNext', {visible: true});
         await page.click('#identifierNext');
         await page.waitForSelector('input[type=password]', {visible: true})
-        await page.type('input[type=password]', this.authenticationOptions.password);
+        await page.type('input[type=password]', password);
         await page.waitFor('#passwordNext');
         await page.click('#passwordNext');
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -187,22 +196,42 @@ export class GoogleAuthenticator {
 
     /**
      * Configurating the Google Authenticator class properties
+     * @param options Required. The configuration options
+     * @param username Required. The gmail username
+     * @param password Required. The gmail password
+     * @param scope Required. The authentication scope
+     * @param redirectURI Optional. The configuration of the redirect URI
+     * @param tokenName Optional. The name of the token
+     * @param tokenDirectory Optional. The directory of the token
      */
-    private configure(): void {
-        //Configuring token path
-        if(this.tokenOptions !== undefined && this.tokenOptions.directory !== undefined) this.tokenDirectory = this.tokenOptions.directory;
-        this.tokenPath = `${this.tokenDirectory}${this.authenticationOptions.clientId}-token.json`;
-        
-        //Configuring Redirect URI
-        if(this.redirectURIOptions === undefined) 
-            this.redirectURIOptions = { protocol: 'http', domain: 'localhost', port: 3000, path: '/oauth2callback' }
-        this.redirectURI = `${this.redirectURIOptions.protocol}://${this.redirectURIOptions.domain}`;
-        if(this.redirectURIOptions.protocol !== undefined) this.redirectURI += `:${this.redirectURIOptions.port}`;
-        this.redirectURI += this.redirectURIOptions.path;
-        
-        //Configuring debug options
-        if(this.debugOptions === undefined) this.debugOptions = { debug: false, debugger: console.log };
-        else if(this.debugOptions.debugger === undefined) this.debugOptions.debugger = console.log;
+    private configure(options: NewTokenAuthentication): GenerateTokenParameters {
+        let tokenDirectory = './tokens/';
+        let tokenName = `${this.clientId}-token`;
+        let tmpRedirectURIOptions: any = {};
+        //token related options
+        if(options.tokenDirectory !== undefined) tokenDirectory = options.tokenDirectory;
+        if(options.tokenName !== undefined) tokenName = options.tokenName;
+        //redirect URI related options
+        if(options.redirectURIOptions === undefined) tmpRedirectURIOptions = { protocol: 'http', domain: 'localhost', port: 3000, path: '/oauth2callback' };
+        if(options.redirectURIOptions !== undefined && options.redirectURIOptions.protocol !== undefined) tmpRedirectURIOptions.protocol = options.redirectURIOptions.protocol;
+        if(options.redirectURIOptions !== undefined && options.redirectURIOptions.domain !== undefined) tmpRedirectURIOptions.domain = options.redirectURIOptions.domain;
+        if(options.redirectURIOptions !== undefined && options.redirectURIOptions.port !== undefined) tmpRedirectURIOptions.port = options.redirectURIOptions.port;
+        if(options.redirectURIOptions !== undefined && options.redirectURIOptions.path !== undefined) tmpRedirectURIOptions.path = options.redirectURIOptions.path;
+        //building the redirect URI
+        let redirectURI = `${tmpRedirectURIOptions.protocol}://${tmpRedirectURIOptions.domain}`;
+        if(tmpRedirectURIOptions.port !== undefined) redirectURI += `:${tmpRedirectURIOptions.port}`;
+        redirectURI += tmpRedirectURIOptions.path;
+        const redirectURIOptions: RedirectURIOptions = tmpRedirectURIOptions;
+        return {
+            username: options.username,
+            password: options.password,
+            scope: options.scope,
+            tokenName: tokenName,
+            tokenDirectory: tokenDirectory,
+            tokenFullPath: `${tokenDirectory}${tokenName}.json`,
+            redirectURI: redirectURI,
+            redirectURIOptions: redirectURIOptions
+        };
     }
 
     /**
@@ -215,53 +244,101 @@ export class GoogleAuthenticator {
 
     /**
      * Verifying the token directory exists
+     * @param directory The directory to verify
      */
-    private async verifyDirectory(): Promise<void> {
+    private async verifyDirectory(directory: string): Promise<void> {
         try {
-            this.debug(`Verifying directory ${this.tokenDirectory} exists`)
-            await promises.access(this.tokenDirectory);
+            this.debug(`Verifying directory ${directory} exists`)
+            await promises.access(directory);
         }
         catch(error) {
-            this.debug(`Directory ${this.tokenDirectory} doesn't exists, creating it.`)
-            await promises.mkdir(this.tokenDirectory);
+            this.debug(`Directory ${directory} doesn't exists, creating it.`)
+            await promises.mkdir(directory);
         }
     }
 }
 
 /**
  * The parameters to configure the authentication to Google
- * @param clientId The authentication client ID
- * @param clientSecret The authentication client secret
- * @param scope The authentication scope
- * @param username The authentication username
- * @param password The authentication password
+ * @param clientId Required. The authentication client ID
+ * @param clientSecret Required. The authentication client secret
  */
-export interface AuthenticationOptions {
+export interface BasicAuthentication {
     clientId: string, 
-    clientSecret: string, 
+    clientSecret: string
+}
+
+/**
+ * The new token authentication parameters
+ * @param username Required. The gmail username
+ * @param password Required. The gmail password
+ * @param scope Required. The authentication scope
+ * @param redirectURI Optional. The configuration of the redirect URI
+ * @param tokenName Optional. The name of the token
+ * @param tokenDirectory Optional. The directory of the token
+ */
+export interface NewTokenAuthentication {
+    username: string,
+    password: string,
     scope: string[]
-    username?: string,
-    password?: string
+    redirectURIOptions?: RedirectURIOptions,
+    tokenName?: string,
+    tokenDirectory?: string
+}
+
+/**
+ * The token file authentication parameters
+ * @param name Required. The name of the token
+ * @param directory Required. The directory of the token
+ */
+export interface TokenFileAuthentication {
+    name: string,
+    directory: string
+}
+
+/**
+ * The token authentication parameters
+ * @param token Required. The token JS object
+ */
+export interface TokenAuthentication { 
+    token: Credentials
 }
 
 /**
  * The parameters to configure class options
- * @param redirectURIOptions The redirect URI options
- * @param tokenOptions The token options
- * @param debugOptions The debug options
+ * @param debugOptions Optional. The debug options
  */
 export interface Options {
-    redirectURIOptions?: RedirectURIOptions,
-    tokenOptions?: TokenOptions,
     debugOptions?: DebugOptions
 }
 
 /**
+ * The parameters to pass to the generateToken function
+ * @param username Required. The email address username
+ * @param password Required. The email address password
+ * @param scope Required. The authorization scope
+ * @param tokenName Required. The name of the token
+ * @param tokenDirectory Required. The directory of the token
+ * @param redirectURI Required. The full redirectURI
+ * @param redirectURIOptions Required. The redirectURI options
+ */
+export interface GenerateTokenParameters { 
+    username: string,
+    password: string,
+    scope: string[],
+    tokenName: string,
+    tokenDirectory: string,
+    tokenFullPath: string,
+    redirectURI: string,
+    redirectURIOptions: RedirectURIOptions
+}
+
+/**
  * The parameters to configure the redirectURI
- * @param protocol The protocol of the redirectURI
- * @param domain The domain of the redirectURI
- * @param port The port of the redirectURI
- * @param path The path of the RedirectURI
+ * @param protocol Required. The protocol of the redirectURI
+ * @param domain Required. The domain of the redirectURI
+ * @param port Optional. The port of the redirectURI
+ * @param path Required. The path of the RedirectURI
  */
 export interface RedirectURIOptions {
     protocol: string,
@@ -271,19 +348,9 @@ export interface RedirectURIOptions {
 }
 
 /**
- * The parameters to configure the token options
- * @param directory The directory of the token
- * @param token The token object
- */
-export interface TokenOptions {
-    directory?: string,
-    token?: Token
-}
-
-/**
  * The parameters to configure the debug logging
- * @param debug Is debug enabled
- * @param debugger The debugger of the debug printing
+ * @param debug Required. Is debug enabled
+ * @param debugger Optional. The debugger of the debug printing
  */
 export interface DebugOptions {
     debug: boolean,
@@ -292,11 +359,11 @@ export interface DebugOptions {
 
 /**
  * The token object
- * @param access_token The access token to authenticate the Google user
- * @param refresh_token The refresh token to use when the access token is outdated
- * @param scope The permissions scope of the token
- * @param token_type The type of the token
- * @param expiry_date The expiry date of the token
+ * @param access_token Required. The access token to authenticate the Google user
+ * @param refresh_token Required. The refresh token to use when the access token is outdated
+ * @param scope Required. The permissions scope of the token
+ * @param token_type Required. The type of the token
+ * @param expiry_date Required. The expiry date of the token
  */
 export interface Token {
     access_token: string,
@@ -308,8 +375,8 @@ export interface Token {
 
 /**
  * The parameters of filterEmails function
- * @param labelIds The label ids of the filtered emails
- * @param subject The subject of the filtered emails
+ * @param labelIds Required. The label ids of the filtered emails
+ * @param subject Required. The subject of the filtered emails
  */
 export interface FilterEmailsParameters {
     labelIds: string[]
