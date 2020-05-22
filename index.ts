@@ -12,27 +12,27 @@ export class GoogleAuthenticator {
     private clientSecret: string
     private isTokenGenerated: boolean = true;
     private authServer: Server;
+    private debugOptions: DebugOptions = { debug: false, debugger: console.log };
     public oAuth2Client: OAuth2Client;
     public gmailAPI: gmail_v1.Gmail;
-    private debugOptions: DebugOptions = { debug: false, debugger: console.log };
     /**
      * Initializing the Google Authenticator object
      * @param authenticationOptions The parameters to configure the authentication to Google
      * @param authenticationOptions.clientId The authentication client ID
      * @param authenticationOptions.clientSecret The authentication client secret
-     * @param options.debugOptions Optional. The parameters to configure the debug logging
-     * @param options.debugOptions.debug Is debug enabled
-     * @param options.debugOptions.debugger The debugger of the debug printing
+     * @param debugOptions Optional. The parameters to configure the debug logging
+     * @param debugOptions.debug Is debug enabled
+     * @param debugOptions.debugger The debugger of the debug printing
      */
-    constructor(authenticationOptions: BasicAuthentication, options?: DebugOptions) {
+    constructor(authenticationOptions: BasicAuthentication, debugOptions?: DebugOptions) {
         this.clientId = authenticationOptions.clientId;
         this.clientSecret = authenticationOptions.clientSecret;
         this.gmailAPI = google.gmail('v1');
         this.oAuth2Client = new google.auth.OAuth2(this.clientId, this.clientSecret);
-        if(options !== undefined && options.debug !== undefined)
-            this.debugOptions.debug = options.debug;
-        if(options !== undefined && options.debugger !== undefined)
-            this.debugOptions.debugger = options.debugger;
+        if(debugOptions !== undefined && debugOptions.debug !== undefined)
+            this.debugOptions.debug = debugOptions.debug;
+        if(debugOptions !== undefined && debugOptions.debugger !== undefined)
+            this.debugOptions.debugger = debugOptions.debugger;
     } 
     
     /**
