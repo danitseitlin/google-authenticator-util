@@ -45,9 +45,12 @@ export class GoogleAuthenticator {
      */
     async authorizeWithNewToken(options: NewTokenAuthentication) {
         try {
+            this.debug('Configurating given parameters');
             const configuratedOptions = this.configure(options);
+            this.debug('==== Configurated parameters ====');
+            this.debug(configuratedOptions.toString());
+            this.debug('=================================');
             this.oAuth2Client = new google.auth.OAuth2(this.clientId, this.clientSecret, configuratedOptions.redirectURI);
-            this.debug('Authorizing with access token');
             await this.generateToken(configuratedOptions);
             return this.oAuth2Client;
         }
@@ -67,7 +70,10 @@ export class GoogleAuthenticator {
             let directory = options.directory;
             if(directory[directory.length - 1] !== '/') directory += '/';
             const name = `${options.name}.json`;
-            const token = JSON.parse(await promises.readFile(directory + name, 'utf8'));
+            const tokenFullPath = directory + name;
+            this.debug(`Retrieving token from file: ${tokenFullPath}`)
+            const token = JSON.parse(await promises.readFile(tokenFullPath, 'utf8'));
+            this.debug(`Setting the token as ${JSON.stringify(token)}`);
             this.oAuth2Client.setCredentials(token);
             return this.oAuth2Client;
         }
@@ -82,6 +88,7 @@ export class GoogleAuthenticator {
      */
     async authorizeWithToken(token: Token): Promise<OAuth2Client> {
         try {
+            this.debug(`Setting the token as ${JSON.stringify(token)}`);
             this.oAuth2Client.setCredentials(token);
             return this.oAuth2Client;
         }
@@ -101,7 +108,7 @@ export class GoogleAuthenticator {
      * @param options.redirectURI The full redirectURI
      * @param options.redirectURIOptions The redirectURI options
      */
-    async generateToken(options: GenerateTokenParameters): Promise<OAuth2Client> {
+    private async generateToken(options: GenerateTokenParameters): Promise<OAuth2Client> {
         const handler = express();
         const scope = this;
         this.debug('Retrieving a new token');
@@ -122,12 +129,12 @@ export class GoogleAuthenticator {
                 await promises.writeFile(options.tokenFullPath, JSON.stringify(token));
                 scope.isTokenGenerated = true;
                 scope.authServer.close();
-                scope.debug('Killing the mock server....')
+                scope.debug('Stopping the authentication server')
             });
         });
         this.debug(`Creating a mock server on port ${options.redirectURIOptions.port}, domain: ${options.redirectURIOptions.domain}`);
         this.authServer = createServer(handler).listen(options.redirectURIOptions.port, options.redirectURIOptions.domain);  
-        this.debug(`Authenticating to get the first token`)
+        this.debug('Authenticating to get the first token')
         await this.authenticateToken(authUrl, options.username, options.password);
         await new Promise(resolve => setTimeout(resolve, 5000));
         this.debug(`Token generation process is ${this.isTokenGenerated}`)
@@ -207,17 +214,20 @@ export class GoogleAuthenticator {
     private configure(options: NewTokenAuthentication): GenerateTokenParameters {
         let tokenDirectory = './tokens/';
         let tokenName = `${this.clientId}-token`;
-        let tmpRedirectURIOptions: any = {};
+        let tmpRedirectURIOptions: RedirectURIOptions = { protocol: 'http', domain: 'localhost', path: '/oauth2callback' };
         //token related options
+        this.debug('Configurating token path');
         if(options.tokenDirectory !== undefined) tokenDirectory = options.tokenDirectory;
         if(options.tokenName !== undefined) tokenName = options.tokenName;
         //redirect URI related options
-        if(options.redirectURIOptions === undefined) tmpRedirectURIOptions = { protocol: 'http', domain: 'localhost', port: 3000, path: '/oauth2callback' };
+        this.debug('Configurating redirect URI options');
         if(options.redirectURIOptions !== undefined && options.redirectURIOptions.protocol !== undefined) tmpRedirectURIOptions.protocol = options.redirectURIOptions.protocol;
         if(options.redirectURIOptions !== undefined && options.redirectURIOptions.domain !== undefined) tmpRedirectURIOptions.domain = options.redirectURIOptions.domain;
-        if(options.redirectURIOptions !== undefined && options.redirectURIOptions.port !== undefined) tmpRedirectURIOptions.port = options.redirectURIOptions.port;
         if(options.redirectURIOptions !== undefined && options.redirectURIOptions.path !== undefined) tmpRedirectURIOptions.path = options.redirectURIOptions.path;
+        if(options.redirectURIOptions !== undefined && options.redirectURIOptions.port !== undefined) tmpRedirectURIOptions.port = options.redirectURIOptions.port;
+        else tmpRedirectURIOptions.port = 3000;
         //building the redirect URI
+        this.debug('Configurating the redirect URI')
         let redirectURI = `${tmpRedirectURIOptions.protocol}://${tmpRedirectURIOptions.domain}`;
         if(tmpRedirectURIOptions.port !== undefined) redirectURI += `:${tmpRedirectURIOptions.port}`;
         redirectURI += tmpRedirectURIOptions.path;
@@ -239,7 +249,7 @@ export class GoogleAuthenticator {
      * @param message The printed message
      */
     private debug(message: string): void {
-        if(this.debugOptions.debug) this.debugOptions.debugger(message);
+        if(this.debugOptions.debug) this.debugOptions.debugger(`DEBUG: ${message}`);
     }
 
     /**
