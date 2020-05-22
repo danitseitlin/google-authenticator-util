@@ -41,7 +41,7 @@ const oAuth2 = authenticator.authorizeWithTokenFile({
 ### Existing token JS object
 If you don't want to store a token file, you can always re-use the existing token as a JS object inside the code:
 ```
-const oAuth2 = authenticator.authorizeWithTokenFile({
+const oAuth2 = authenticator.authorizeWithToken({
     access_token: 'your access token',
     refresh_token: 'your refresh token',
     scope: ['scope 1', 'scope 2'],
