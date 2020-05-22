@@ -81,8 +81,7 @@ const oAuth2 = authenticator.authorizeWithNewToken({
     username: 'your email address username (before the @)',
     password: 'your email address password'
 });
-const gmail = authenticator.getGmailClient();
-const messages = await gmail.users.messages.list({
+const messages = await authenticator.gmailAPI.users.messages.list({
     userId: 'me',
     labelIds: ['UNREAD'],
     auth: oAuth2,
