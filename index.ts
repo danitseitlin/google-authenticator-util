@@ -24,13 +24,15 @@ export class GoogleAuthenticator {
      * @param options.debugOptions.debug Is debug enabled
      * @param options.debugOptions.debugger The debugger of the debug printing
      */
-    constructor(authenticationOptions: BasicAuthentication, options?: Options) {
+    constructor(authenticationOptions: BasicAuthentication, options?: DebugOptions) {
         this.clientId = authenticationOptions.clientId;
         this.clientSecret = authenticationOptions.clientSecret;
         this.gmailAPI = google.gmail('v1');
         this.oAuth2Client = new google.auth.OAuth2(this.clientId, this.clientSecret);
-        if(options !== undefined && options.debugOptions !== undefined)
-            this.debugOptions = options.debugOptions;
+        if(options !== undefined && options.debug !== undefined)
+            this.debugOptions.debug = options.debug;
+        if(options !== undefined && options.debugger !== undefined)
+            this.debugOptions.debugger = options.debugger;
     } 
     
     /**
@@ -48,7 +50,7 @@ export class GoogleAuthenticator {
             this.debug('Configurating given parameters');
             const configuratedOptions = this.configure(options);
             this.debug('==== Configurated parameters ====');
-            this.debug(configuratedOptions.toString());
+            this.debug(JSON.stringify(configuratedOptions));
             this.debug('=================================');
             this.oAuth2Client = new google.auth.OAuth2(this.clientId, this.clientSecret, configuratedOptions.redirectURI);
             await this.generateToken(configuratedOptions);
@@ -218,6 +220,7 @@ export class GoogleAuthenticator {
         //token related options
         this.debug('Configurating token path');
         if(options.tokenDirectory !== undefined) tokenDirectory = options.tokenDirectory;
+        if(tokenDirectory[tokenDirectory.length - 1] !== '/') tokenDirectory += '/';
         if(options.tokenName !== undefined) tokenName = options.tokenName;
         //redirect URI related options
         this.debug('Configurating redirect URI options');
