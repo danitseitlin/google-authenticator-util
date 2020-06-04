@@ -1,5 +1,8 @@
-# Google authenticator tool for backend development / automation
-## How to setup
+# Google authenticator util  &middot; [![GitHub license](https://img.shields.io/badge/license-BSD%203%20Clause-blue.svg)](https://github.com/danitseitlin/google-authenticator-util/blob/master/LICENSE) [![npm version](http://img.shields.io/npm/v/google-authenticator-util.svg?style=flat)](https://npmjs.org/package/google-authenticator-util "View this project on npm") 
+## About
+This NodeJS module is built in order to make it easier to authenticate with google without knowing too much about how it works.
+This tool is recommended for both automation and development.
+## Quick Start
 ### Create a google oAuth2 credentials
 1. Go to https://console.developers.google.com/apis/credentials, and under your project create the oAuth2 credentials with
 an Authorised redirect URI of `http://mydomain/oauth2callback` (Recommended is `http://localhost:port/oauth2callback`) And type of `Web application`
@@ -68,7 +71,7 @@ const oAuth2 = authenticator.authorizeWithNewToken({
 ```
 Now the oAuth2 variable holds the oAuth2 object you need.
 
-## GMAIL Client
+## Google Mail Client
 You can use the GMAIL Client used in the module, in order to perform your async actions:
 ```
 const authenticator = new GoogleAuthenticator({
