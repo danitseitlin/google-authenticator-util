@@ -1,4 +1,4 @@
-# Google authenticator util  &middot; [![GitHub license](https://img.shields.io/badge/license-BSD%203%20Clause-blue.svg)](https://github.com/danitseitlin/google-authenticator-util/blob/master/LICENSE) [![npm version](http://img.shields.io/npm/v/cli-argument-parser.svg?style=flat)](https://npmjs.org/package/google-authenticator-util "View this project on npm") 
+# Google authenticator util  &middot; [![GitHub license](https://img.shields.io/badge/license-BSD%203%20Clause-blue.svg)](https://github.com/danitseitlin/google-authenticator-util/blob/master/LICENSE) [![npm version](http://img.shields.io/npm/v/google-authenticator-util.svg?style=flat)](https://npmjs.org/package/google-authenticator-util "View this project on npm") 
 ## About
 This NodeJS module is built in order to make it easier to authenticate with google without knowing too much about how it works.
 This tool is recommended for both automation and development.
