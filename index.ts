@@ -155,7 +155,7 @@ export class GoogleAuthenticator {
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
         //UI authentication when there is no access token.
         await page.goto(authUrl, {waitUntil: 'networkidle2'});
-        await page.waitForSelector('input[type=email]', {timeout: 0, visible: true});
+        await page.waitForSelector('input[type=email]', {visible: true});
         this.debug('Filling the username');
         await page.type('input[type=email]', username);
         await page.click('#identifierNext');
