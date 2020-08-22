@@ -18,7 +18,6 @@ describe('Tests', async function() {
             password: cliArguments.password,
             scope: [cliArguments.scope]
         })
-
         const emails = await authenticator.filterEmails({
             labelIds: [],
             subject: ''

@@ -10,4 +10,4 @@ jobs:
     - name: Setting up the environment
       run: npm install && npm run build
     - name: Running unit tests
-      run: npm run unit-tests -- --clientId=${secrets.CLIENTID} --clientSecret=${secrets.CLIENTSECRET} --username=${secrets.EMAIL} --password=${secrets.EMAILPASSWORD} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false
+      run: npm run unit-tests -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false
