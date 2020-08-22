@@ -1,17 +1,15 @@
-// const fs = require('fs').promises;
 import { promises } from 'fs';
+import { MockServer } from 'dmock-server'
 import { google, gmail_v1 } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
 import { Credentials } from 'google-auth-library';
-import * as express from 'express';
-import { createServer, Server } from 'http';
 import * as puppeteer from 'puppeteer-core';
 
 export class GoogleAuthenticator {
     private clientId: string
     private clientSecret: string
-    private isTokenGenerated: boolean = true;
-    private authServer: Server;
+    private isTokenGenerated = true;
+    private authServer: MockServer;
     private debugOptions: DebugOptions = { debug: false, debugger: console.log };
     public oAuth2Client: OAuth2Client;
     public gmailAPI: gmail_v1.Gmail;
@@ -111,8 +109,6 @@ export class GoogleAuthenticator {
      * @param options.redirectURIOptions The redirectURI options
      */
     private async generateToken(options: GenerateTokenParameters): Promise<OAuth2Client> {
-        const handler = express();
-        const scope = this;
         this.debug('Retrieving a new token');
         const authUrl = this.oAuth2Client.generateAuthUrl({
             access_type: 'offline',
@@ -120,22 +116,17 @@ export class GoogleAuthenticator {
         });
         this.debug(`Generating new auth URL: ${authUrl}`);
         this.isTokenGenerated = false;
-        handler.get(options.redirectURIOptions.path, async function (req, res) {
-            scope.debug(`Getting a new token with code ${res.req.query.code}`)
-            scope.oAuth2Client.getToken((res.req.query.code).toString(), async (err, token) => {
-                if (err) return scope.debug(`Error retrieving access token ${err}`);
-                scope.debug(`Setting the token as ${JSON.stringify(token)}`);
-                scope.oAuth2Client.setCredentials(token);
-                // Store the token to disk for later program executions
-                await scope.verifyDirectory(options.tokenDirectory);
-                await promises.writeFile(options.tokenFullPath, JSON.stringify(token));
-                scope.isTokenGenerated = true;
-                scope.authServer.close();
-                scope.debug('Stopping the authentication server')
-            });
-        });
         this.debug(`Creating a mock server on port ${options.redirectURIOptions.port}, domain: ${options.redirectURIOptions.domain}`);
-        this.authServer = createServer(handler).listen(options.redirectURIOptions.port, options.redirectURIOptions.domain);  
+        this.authServer = new MockServer({
+            hostname: options.redirectURIOptions.domain,
+            port: options.redirectURIOptions.port,
+            routes: [{
+                path: options.redirectURIOptions.path,
+                method: 'get',
+                response: (req, res) => this.retrieveToken(req, res, options)
+            }]
+        })
+        this.authServer.start();
         this.debug('Authenticating to get the first token')
         await this.authenticateToken(authUrl, options.username, options.password);
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -184,9 +175,17 @@ export class GoogleAuthenticator {
     private async authenticateToken(authUrl: string, username: string, password: string): Promise<void> {
         const browserFetcher = puppeteer.createBrowserFetcher();
         const revisionInfo = await browserFetcher.download('737027');
-        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: false});
+        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath});
         const page = await browser.newPage();
-
+        const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
+        console.log(headlessUserAgent)
+        const chromeUserAgent = headlessUserAgent.replace('HeadlessChrome', 'Chrome');
+        await page.setUserAgent(chromeUserAgent);
+        await page.setExtraHTTPHeaders({
+          'accept-language': 'en-US,en;q=0.8'
+        });
+        // await page.setUserAgent('HeadlessMozilla/5.0 (Windows NT 10.0; Win64; x64) HeadlessAppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/61.0.3163.100 HeadlessSafari/537.36');
+        // await page.setUserAgent('HeadlessChrome/61.0.3163.100');
         //UI authentication when there is no access token.
         await page.goto(authUrl);
         await page.waitForSelector('input[type=email]', {visible: true});
@@ -245,6 +244,21 @@ export class GoogleAuthenticator {
             redirectURI: redirectURI,
             redirectURIOptions: redirectURIOptions
         };
+    }
+
+    private retrieveToken(req: any, res: { req: { query: { code: any; }; }; }, options: GenerateTokenParameters) {
+        this.debug(`Getting a new token with code ${res.req.query.code}`)
+        this.oAuth2Client.getToken((res.req.query.code).toString(), async (err, token) => {
+            if (err) return this.debug(`Error retrieving access token ${err}`);
+            this.debug(`Setting the token as ${JSON.stringify(token)}`);
+            this.oAuth2Client.setCredentials(token);
+            // Store the token to disk for later program executions
+            await this.verifyDirectory(options.tokenDirectory);
+            await promises.writeFile(options.tokenFullPath, JSON.stringify(token));
+            this.isTokenGenerated = true;
+            this.authServer.stop();
+            this.debug('Stopping the authentication server')
+        });
     }
 
     /**
