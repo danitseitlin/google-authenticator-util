@@ -1,5 +1,5 @@
 import { promises } from 'fs';
-import { MockServer } from 'dmock-server'
+import { MockServer, Request, Response } from 'dmock-server'
 import { google, gmail_v1 } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
 import { Credentials } from 'google-auth-library';
@@ -13,6 +13,7 @@ export class GoogleAuthenticator {
     private debugOptions: DebugOptions = { debug: false, debugger: console.log };
     public oAuth2Client: OAuth2Client;
     public gmailAPI: gmail_v1.Gmail;
+
     /**
      * Initializing the Google Authenticator object
      * @param authenticationOptions The parameters to configure the authentication to Google
@@ -48,7 +49,13 @@ export class GoogleAuthenticator {
             this.debug('Configurating given parameters');
             const configuratedOptions = this.configure(options);
             this.debug('==== Configurated parameters ====');
-            this.debug(JSON.stringify(configuratedOptions));
+            this.debug(`Username: ${(configuratedOptions.username !== undefined) ? '***': 'undefined'}`)
+            this.debug(`Password: ${(configuratedOptions.password !== undefined) ? '***': 'undefined'}`)
+            this.debug(`Token Name: ${(configuratedOptions.tokenName.indexOf(this.clientId) !== -1) ? 
+                configuratedOptions.tokenName.replace(this.clientId, '*****'): configuratedOptions.tokenName}`
+            )
+            this.debug(`Token Directory: ${configuratedOptions.tokenDirectory}`);
+            this.debug(`Scope: ${configuratedOptions.scope}`)
             this.debug('=================================');
             this.oAuth2Client = new google.auth.OAuth2(this.clientId, this.clientSecret, configuratedOptions.redirectURI);
             await this.generateToken(configuratedOptions);
@@ -69,11 +76,11 @@ export class GoogleAuthenticator {
         try {
             let directory = options.directory;
             if(directory[directory.length - 1] !== '/') directory += '/';
-            const name = `${options.name}.json`;
+            const name = (options.name.indexOf('.json') !== -1) ? options.name: `${options.name}.json`;
             const tokenFullPath = directory + name;
             this.debug(`Retrieving token from file: ${tokenFullPath}`)
             const token = JSON.parse(await promises.readFile(tokenFullPath, 'utf8'));
-            this.debug(`Setting the token as ${JSON.stringify(token)}`);
+            this.debug('Setting the token');
             this.oAuth2Client.setCredentials(token);
             return this.oAuth2Client;
         }
@@ -88,7 +95,7 @@ export class GoogleAuthenticator {
      */
     async authorizeWithToken(token: Token): Promise<OAuth2Client> {
         try {
-            this.debug(`Setting the token as ${JSON.stringify(token)}`);
+            this.debug('Setting the token');
             this.oAuth2Client.setCredentials(token);
             return this.oAuth2Client;
         }
@@ -123,7 +130,7 @@ export class GoogleAuthenticator {
             routes: [{
                 path: options.redirectURIOptions.path,
                 method: 'get',
-                response: (req, res) => this.retrieveToken(req, res, options)
+                response: (res: Response) => this.retrieveToken(res.req.query.code.toString(), options)
             }]
         })
         this.authServer.start();
@@ -135,38 +142,6 @@ export class GoogleAuthenticator {
     }
 
     /**
-     * Getting a list of emails
-     * @param parameters The parameters to filter with
-     * @param parameters.labelIds The label ids of the filtered emails
-     * @param parameters.subject The subject of the filtered emails
-     */
-    async filterEmails(parameters: FilterEmailsParameters): Promise<gmail_v1.Schema$Message[]> {
-        const emails: gmail_v1.Schema$Message[] = [];
-        const messagesParameters: gmail_v1.Params$Resource$Users$Messages$List = {
-            userId: 'me',
-            labelIds: parameters.labelIds,
-            auth: this.oAuth2Client,
-            q: `subject: ${parameters.subject}`
-        };
-        const messagesResponse = await this.gmailAPI.users.messages.list(messagesParameters);
-        //Verifying we have at least 1 response
-        if(messagesResponse.data.resultSizeEstimate > 0) {
-            for(const message of messagesResponse.data.messages) {
-                const messageResponse = await this.gmailAPI.users.messages.get({
-                    userId: 'me',
-                    auth: this.oAuth2Client,
-                    id: message.id,
-                    format: 'raw'
-                });
-                //Converting the raw email message to HTML string
-                messageResponse.data.raw = Buffer.from(messageResponse.data.raw, 'base64').toString('ascii');
-                emails.push(messageResponse.data);
-            }
-        }
-        return emails;
-    }
-
-    /**
      * Authenticating the first token using the google UI
      * @param authUrl The authentication URL
      * @param username The email address username
@@ -175,28 +150,21 @@ export class GoogleAuthenticator {
     private async authenticateToken(authUrl: string, username: string, password: string): Promise<void> {
         const browserFetcher = puppeteer.createBrowserFetcher();
         const revisionInfo = await browserFetcher.download('737027');
-        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath});
+        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: true});
         const page = await browser.newPage();
-        const headlessUserAgent = await page.evaluate(() => navigator.userAgent);
-        console.log(headlessUserAgent)
-        const chromeUserAgent = headlessUserAgent.replace('HeadlessChrome', 'Chrome');
-        await page.setUserAgent(chromeUserAgent);
-        await page.setExtraHTTPHeaders({
-          'accept-language': 'en-US,en;q=0.8'
-        });
-        // await page.setUserAgent('HeadlessMozilla/5.0 (Windows NT 10.0; Win64; x64) HeadlessAppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/61.0.3163.100 HeadlessSafari/537.36');
-        // await page.setUserAgent('HeadlessChrome/61.0.3163.100');
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
         //UI authentication when there is no access token.
-        await page.goto(authUrl);
+        await page.goto(authUrl, {waitUntil: 'networkidle2'});
         await page.waitForSelector('input[type=email]', {visible: true});
+        this.debug('Filling the username');
         await page.type('input[type=email]', username);
-        await page.waitForSelector('#identifierNext', {visible: true});
         await page.click('#identifierNext');
         await page.waitForSelector('input[type=password]', {visible: true})
+        this.debug('Filling the password');
         await page.type('input[type=password]', password);
-        await page.waitFor('#passwordNext');
         await page.click('#passwordNext');
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        while(this.isTokenGenerated !== true) 
+            await new Promise(resolve => setTimeout(resolve, 500))
         await browser.close();
         this.debug(`Waiting for token generation process to be finished`)
         await browserFetcher.remove(revisionInfo.revision);
@@ -233,6 +201,8 @@ export class GoogleAuthenticator {
         let redirectURI = `${tmpRedirectURIOptions.protocol}://${tmpRedirectURIOptions.domain}`;
         if(tmpRedirectURIOptions.port !== undefined) redirectURI += `:${tmpRedirectURIOptions.port}`;
         redirectURI += tmpRedirectURIOptions.path;
+        this.debug('Configurating scope');
+        if(options.scope === undefined) options.scope = ['https://www.googleapis.com/auth/gmail.readonly']
         const redirectURIOptions: RedirectURIOptions = tmpRedirectURIOptions;
         return {
             username: options.username,
@@ -246,11 +216,16 @@ export class GoogleAuthenticator {
         };
     }
 
-    private retrieveToken(req: any, res: { req: { query: { code: any; }; }; }, options: GenerateTokenParameters) {
-        this.debug(`Getting a new token with code ${res.req.query.code}`)
-        this.oAuth2Client.getToken((res.req.query.code).toString(), async (err, token) => {
+    /**
+     * Retrieving a token
+     * @param code The code of the authentication
+     * @param options The options of token generation
+     */
+    private retrieveToken(code: string, options: GenerateTokenParameters) {
+        this.debug(`Getting a new token with code ${code}`)
+        this.oAuth2Client.getToken(code, async (err, token) => {
             if (err) return this.debug(`Error retrieving access token ${err}`);
-            this.debug(`Setting the token as ${JSON.stringify(token)}`);
+            this.debug('Setting the token');
             this.oAuth2Client.setCredentials(token);
             // Store the token to disk for later program executions
             await this.verifyDirectory(options.tokenDirectory);
@@ -282,6 +257,38 @@ export class GoogleAuthenticator {
             this.debug(`Directory ${directory} doesn't exists, creating it.`)
             await promises.mkdir(directory);
         }
+    }
+
+    /**
+     * Getting a list of emails
+     * @param parameters The parameters to filter with
+     * @param parameters.labelIds The label ids of the filtered emails
+     * @param parameters.subject The subject of the filtered emails
+     */
+    async filterEmails(parameters: FilterEmailsParameters): Promise<gmail_v1.Schema$Message[]> {
+        const emails: gmail_v1.Schema$Message[] = [];
+        const messagesParameters: gmail_v1.Params$Resource$Users$Messages$List = {
+            userId: 'me',
+            labelIds: parameters.labelIds,
+            auth: this.oAuth2Client,
+            q: `subject: ${parameters.subject}`
+        };
+        const messagesResponse = await this.gmailAPI.users.messages.list(messagesParameters);
+        //Verifying we have at least 1 response
+        if(messagesResponse.data.resultSizeEstimate > 0) {
+            for(const message of messagesResponse.data.messages) {
+                const messageResponse = await this.gmailAPI.users.messages.get({
+                    userId: 'me',
+                    auth: this.oAuth2Client,
+                    id: message.id,
+                    format: 'raw'
+                });
+                //Converting the raw email message to HTML string
+                messageResponse.data.raw = Buffer.from(messageResponse.data.raw, 'base64').toString('ascii');
+                emails.push(messageResponse.data);
+            }
+        }
+        return emails;
     }
 }
 

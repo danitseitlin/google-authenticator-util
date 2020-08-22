@@ -16,7 +16,7 @@
   "keywords": [
     "Google",
     "oAuth2",
-    "Google auth"
+    "Google auth tool"
   ],
   "author": "Dani Tseitlin",
   "license": "BSD-3-Clause",
@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/danitseitlin/google-authenticator-util#readme",
   "dependencies": {
-    "dmock-server": "^1.2.6",
+    "dmock-server": "^1.5.2",
     "express": "4.17.1",
     "googleapis": "55.0.0",
     "http": "0.0.1-security",
@@ -38,7 +38,7 @@
     "@types/node": "^14.0.14",
     "@types/puppeteer-core": "2.0.0",
     "chai": "^4.2.0",
-    "cli-argument-parser": "^0.1.1",
+    "cli-argument-parser": "^0.1.9",
     "mocha": "^8.1.1",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
