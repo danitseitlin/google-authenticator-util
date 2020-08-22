@@ -130,7 +130,7 @@ export class GoogleAuthenticator {
             routes: [{
                 path: options.redirectURIOptions.path,
                 method: 'get',
-                response: (res: Response) => this.retrieveToken(res.req.query.code.toString(), options)
+                response: (res: Response, req: Request) => this.retrieveToken((req as {[key: string]: any}).req.query.code, options)
             }]
         })
         this.authServer.start();
