@@ -152,6 +152,7 @@ export class GoogleAuthenticator {
         const browserFetcher = puppeteer.createBrowserFetcher();
         const revisionInfo = await browserFetcher.download('737027');
         const headless = (cliArguments.headless === 'false') ? false: true;
+        console.log(`cli argument headless: ${cliArguments.headless}`);
         console.log(`headless: ${headless}`);
         const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: headless, args: ['--no-sandbox']});
         const page = await browser.newPage();
