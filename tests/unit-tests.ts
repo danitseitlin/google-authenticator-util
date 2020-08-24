@@ -3,7 +3,7 @@ import { cliArguments } from 'cli-argument-parser';
 import { expect } from 'chai';
 let authenticator: GoogleAuthenticator;
 describe('Tests', async function() {
-    this.timeout(15 * 100 * 60);
+    this.timeout(2 * 100 * 60);
     before(async () => {
         authenticator = new GoogleAuthenticator({
             clientId: cliArguments.clientId,
