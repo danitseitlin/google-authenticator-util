@@ -4,6 +4,7 @@ import { google, gmail_v1 } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
 import { Credentials } from 'google-auth-library';
 import * as puppeteer from 'puppeteer-core';
+import { cliArguments } from 'cli-argument-parser';
 
 export class GoogleAuthenticator {
     private clientId: string
@@ -150,7 +151,8 @@ export class GoogleAuthenticator {
     private async authenticateToken(authUrl: string, username: string, password: string): Promise<void> {
         const browserFetcher = puppeteer.createBrowserFetcher();
         const revisionInfo = await browserFetcher.download('737027');
-        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: true, args: ['--no-sandbox']});
+        const headless = (cliArguments.headless === 'false') ? false: true;
+        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: headless, args: ['--no-sandbox']});
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
         //UI authentication when there is no access token.
