@@ -152,7 +152,11 @@ export class GoogleAuthenticator {
         const browserFetcher = puppeteer.createBrowserFetcher();
         const revisionInfo = await browserFetcher.download('737027');
         const headless = (cliArguments.headless === 'false') ? false: true;
-        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: headless, args: ['--no-sandbox', '--disable-setuid-sandbox']});
+        const browser = await puppeteer.launch({
+            executablePath: revisionInfo.executablePath,
+            headless: headless, args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            ignoreDefaultArgs: ['--disable-extensions']
+        });
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3419.0 Safari/537.36');
         //Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3419.0 Safari/537.36
