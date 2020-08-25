@@ -154,7 +154,8 @@ export class GoogleAuthenticator {
         const headless = (cliArguments.headless === 'false') ? false: true;
         const browser = await puppeteer.launch({
             executablePath: revisionInfo.executablePath,
-            headless: headless, args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            headless: headless,
+            //args: ['--no-sandbox', '--disable-setuid-sandbox'],
             ignoreDefaultArgs: ['--disable-extensions']
         });
         const page = await browser.newPage();
