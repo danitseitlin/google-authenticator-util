@@ -41,6 +41,6 @@
     "cli-argument-parser": "^0.1.9",
     "mocha": "^8.1.1",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.7"
+    "typescript": "^4.0.2"
   }
 }
