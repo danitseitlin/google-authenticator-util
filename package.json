@@ -27,7 +27,7 @@
   "dependencies": {
     "dmock-server": "^1.5.2",
     "express": "4.17.1",
-    "googleapis": "55.0.0",
+    "googleapis": "59.0.0",
     "http": "0.0.1-security",
     "puppeteer-core": "^5.2.1"
   },
