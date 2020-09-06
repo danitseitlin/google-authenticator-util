@@ -153,7 +153,7 @@ export class GoogleAuthenticator {
         const revisionInfo = await browserFetcher.download('737027');
         const headless = (cliArguments.headless === 'false') ? false: true;
         const browser = await puppeteer.launch({
-            executablePath: '/usr/bin/chromium-browser',//revisionInfo.executablePath,
+            executablePath: revisionInfo.executablePath,
             headless: headless,
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
         });
