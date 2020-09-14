@@ -162,13 +162,19 @@ export class GoogleAuthenticator {
         //UI authentication when there is no access token.
         await page.goto(authUrl, {waitUntil: 'networkidle2'});
         await page.waitForSelector('input[type=email]', {visible: true});
+        await page.screenshot({path: 'screenshots/1.png'});
         this.debug('Filling the username');
         await page.type('input[type=email]', username);
+        await page.screenshot({path: 'screenshots/2.png'});
         await page.click('#identifierNext');
+        await page.screenshot({path: 'screenshots/3.png'});
         await page.waitForSelector('input[type=password]', {visible: true})
+        await page.screenshot({path: 'screenshots/4.png'});
         this.debug('Filling the password');
         await page.type('input[type=password]', password);
+        await page.screenshot({path: 'screenshots/5.png'});
         await page.click('#passwordNext');
+        await page.screenshot({path: 'screenshots/6.png'});
         if(await page.$('[data-custom-id=oauthScopeDialog-allow]') !== null) {
             await page.click('[data-custom-id=oauthScopeDialog-allow]');
             if(await page.$('#submit_approve_access') !== null) {
