@@ -154,8 +154,7 @@ export class GoogleAuthenticator {
         const headless = (cliArguments.headless === 'false') ? false: true;
         const browser = await puppeteer.launch({
             executablePath: revisionInfo.executablePath,
-            headless: headless,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            headless: headless
         });
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3419.0 Safari/537.36');
@@ -170,6 +169,12 @@ export class GoogleAuthenticator {
         this.debug('Filling the password');
         await page.type('input[type=password]', password);
         await page.click('#passwordNext');
+        if(await page.$('[data-custom-id=oauthScopeDialog-allow]') !== null) {
+            await page.click('[data-custom-id=oauthScopeDialog-allow]');
+            if(await page.$('#submit_approve_access') !== null) {
+                await page.click('#submit_approve_access');
+            }
+        }
         while(this.isTokenGenerated !== true) 
             await new Promise(resolve => setTimeout(resolve, 500))
         await browser.close();
