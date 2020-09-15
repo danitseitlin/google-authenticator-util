@@ -162,14 +162,14 @@ export class GoogleAuthenticator {
             //Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3419.0 Safari/537.36
             //UI authentication when there is no access token.
             await page.goto(authUrl, {waitUntil: 'networkidle2'});
-            await page.waitForSelector('input[type=email]', {visible: true});
+            await page.waitForSelector('input[type=email]', { timeout: 2000, visible: true });
             await page.screenshot({path: 'screenshots/1.png'});
             this.debug('Filling the username');
             await page.type('input[type=email]', username);
             await page.screenshot({path: 'screenshots/2.png'});
             await page.click('#identifierNext');
             await page.screenshot({path: 'screenshots/3.png'});
-            await page.waitForSelector('input[type=password]', {visible: true})
+            await page.waitForSelector('input[type=password]', { timeout: 2000, visible: true })
             await page.screenshot({path: 'screenshots/4.png'});
             this.debug('Filling the password');
             await page.type('input[type=password]', password);
