@@ -151,7 +151,7 @@ export class GoogleAuthenticator {
     private async authenticateToken(authUrl: string, username: string, password: string): Promise<void> {
         try {
             const browserFetcher = puppeteer.createBrowserFetcher();
-            //const revisionInfo = await browserFetcher.download('737027');
+            const revisionInfo = await browserFetcher.download('737027');
             const headless = (cliArguments.headless === 'false') ? false: true;
             const browser = await puppeteer.launch({
                 //executablePath: revisionInfo.executablePath,
@@ -187,7 +187,7 @@ export class GoogleAuthenticator {
                 await new Promise(resolve => setTimeout(resolve, 500))
             await browser.close();
             this.debug(`Waiting for token generation process to be finished`)
-            //await browserFetcher.remove(revisionInfo.revision);
+            await browserFetcher.remove(revisionInfo.revision);
         } catch(error) {
             throw Error(error)
         }
