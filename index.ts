@@ -187,7 +187,7 @@ export class GoogleAuthenticator {
                 await new Promise(resolve => setTimeout(resolve, 500))
             await browser.close();
             this.debug(`Waiting for token generation process to be finished`)
-            await browserFetcher.remove(revisionInfo.revision);
+            //await browserFetcher.remove(revisionInfo.revision);
         } catch(error) {
             throw Error(error)
         }
