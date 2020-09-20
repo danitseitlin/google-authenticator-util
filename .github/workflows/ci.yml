@@ -15,7 +15,7 @@ jobs:
     - name: Installing NPM packages
       run: npm install && npm install puppeteer && npm run build && PUPPETEER_PRODUCT=firefox npm install
     - name: Running unit tests
-      run: npm run unit-tests -- -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false
+      run: npm run unit-tests -- -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false --platform=linux
       timeout-minutes: 5
   browser:
     runs-on: ubuntu-18.04
@@ -28,7 +28,7 @@ jobs:
     - name: Installing NPM packages
       run: npm install && npm run build
     - name: Running unit tests
-      run: npm run unit-tests -- -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false --headless=false
+      run: npm run unit-tests -- -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false --headless=false --platform=linux
       timeout-minutes: 5
     - name: Archive code coverage results
       uses: actions/upload-artifact@v2
