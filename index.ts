@@ -151,7 +151,7 @@ export class GoogleAuthenticator {
     private async authenticateToken(authUrl: string, username: string, password: string): Promise<void> {
         try {
             const browserFetcher = puppeteer.createBrowserFetcher();
-            const revisionInfo = await browserFetcher.download('737027');
+            const revisionInfo = await browserFetcher.download('782078');
             const headless = (cliArguments.headless === 'false') ? false: true;
             const browser = await puppeteer.launch({
                 //executablePath: revisionInfo.executablePath,
