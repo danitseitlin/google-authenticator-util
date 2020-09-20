@@ -5,6 +5,7 @@ import { OAuth2Client } from 'googleapis-common';
 import { Credentials } from 'google-auth-library';
 import * as puppeteer from 'puppeteer-core';
 import { cliArguments } from 'cli-argument-parser';
+import { Platform } from 'puppeteer-core';
 
 export class GoogleAuthenticator {
     private clientId: string
@@ -150,13 +151,15 @@ export class GoogleAuthenticator {
      */
     private async authenticateToken(authUrl: string, username: string, password: string): Promise<void> {
         try {
-            const browserFetcher = puppeteer.createBrowserFetcher();
+            const browserFetcher = puppeteer.createBrowserFetcher({
+                platform: (cliArguments.platform !== undefined) ? cliArguments.platform as Platform: 'win64'
+            });
             const revisionInfo = await browserFetcher.download('782078');
             const headless = (cliArguments.headless === 'false') ? false: true;
             const browser = await puppeteer.launch({
-                //executablePath: revisionInfo.executablePath,
-                headless: headless,
-                args: ['headless']
+                executablePath: revisionInfo.executablePath,
+                headless: headless//,
+                //args: ['headless']
             });
             const page = await browser.newPage();
             await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3419.0 Safari/537.36');
