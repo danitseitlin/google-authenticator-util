@@ -3,4 +3,4 @@ export {
     RedirectURIOptions, DebugOptions, Token, FilterEmailsParameters
 } from './lib/core';
 
-export { filterEmails } from './lib/utilities';
+export { filterEmails, getEmail, waitForEmail, deleteEmail } from './lib/utilities';
