@@ -2,6 +2,10 @@
 tokens
 node_modules
 tests
+**/tests/*.js
+**/tests/*.ts
 package-lock.json
 index.ts
+core.ts
+utilities.ts
 tsconfig.json
