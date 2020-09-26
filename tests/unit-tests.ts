@@ -1,4 +1,4 @@
-import { GoogleAuthenticator, filterEmails } from '../index';
+import { GoogleAuthenticator, filterEmails, getEmail } from '../index';
 import { cliArguments } from 'cli-argument-parser';
 import { expect } from 'chai';
 let authenticator: GoogleAuthenticator;
@@ -47,7 +47,7 @@ describe('Tests', async function() {
         })
         expect(emails.length).to.be.greaterThan(0, 'The count of emails')
     });
-    it('authorizeWithToken', async () => {
+    it('getEmail', async () => {
         await authenticator.authorizeWithToken(require(`${process.env.INIT_CWD}/tokens/${cliArguments.clientId}-token.json`))
         const emails = await filterEmails({
             auth: authenticator.oAuth2Client,
@@ -55,5 +55,10 @@ describe('Tests', async function() {
             q: 'subject: Security alert'
         })
         expect(emails.length).to.be.greaterThan(0, 'The count of emails')
+        const email = await getEmail({
+            auth: authenticator.oAuth2Client,
+            id: emails[0].id
+        })
+        expect(email.data.raw).contains('Security alert', 'title of the email')
     });
 });
