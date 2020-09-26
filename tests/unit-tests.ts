@@ -1,4 +1,4 @@
-import { GoogleAuthenticator } from '../index';
+import { GoogleAuthenticator, filterEmails } from '../index';
 import { cliArguments } from 'cli-argument-parser';
 import { expect } from 'chai';
 let authenticator: GoogleAuthenticator;
@@ -18,9 +18,10 @@ describe('Tests', async function() {
             password: cliArguments.password,
             scope: [cliArguments.scope]
         })
-        const emails = await authenticator.filterEmails({
-            labelIds: [],
-            subject: ''
+        const emails = await filterEmails({
+            auth: authenticator.oAuth2Client,
+            userId: 'me',
+            q: 'subject: Security alert'
         })
         expect(emails.length).to.be.greaterThan(0, 'The count of emails')
     });
@@ -30,17 +31,28 @@ describe('Tests', async function() {
             name: `${cliArguments.clientId}-token.json`,
             directory: './tokens'
         });
-        const emails = await authenticator.filterEmails({
-            labelIds: [],
-            subject: ''
+        const emails = await filterEmails({
+            auth: authenticator.oAuth2Client,
+            userId: 'me',
+            q: 'subject: Security alert'
         })
         expect(emails.length).to.be.greaterThan(0, 'The count of emails')
     });
     it('authorizeWithToken', async () => {
         await authenticator.authorizeWithToken(require(`${process.env.INIT_CWD}/tokens/${cliArguments.clientId}-token.json`))
-        const emails = await authenticator.filterEmails({
-            labelIds: [],
-            subject: ''
+        const emails = await filterEmails({
+            auth: authenticator.oAuth2Client,
+            userId: 'me',
+            q: 'subject: Security alert'
+        })
+        expect(emails.length).to.be.greaterThan(0, 'The count of emails')
+    });
+    it('authorizeWithToken', async () => {
+        await authenticator.authorizeWithToken(require(`${process.env.INIT_CWD}/tokens/${cliArguments.clientId}-token.json`))
+        const emails = await filterEmails({
+            auth: authenticator.oAuth2Client,
+            userId: 'me',
+            q: 'subject: Security alert'
         })
         expect(emails.length).to.be.greaterThan(0, 'The count of emails')
     });
