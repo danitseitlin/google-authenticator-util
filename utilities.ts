@@ -47,9 +47,9 @@ export async function getEmail(parameters: gmail_v1.Params$Resource$Users$Messag
  * @param parameters.pageToken Page token to retrieve a specific page of results in the list.
  * @param parameters.q Only return messages matching the specified query. Supports the same query format as the Gmail search box. For example, "from:someuser@example.com rfc822msgid:<somemsgid@example.com> is:unread". Parameter cannot be used when accessing the api using the gmail.metadata scope.
  * @param parameters.userId The user's email address. The special value me can be used to indicate the authenticated user.
- * @param timeoutInSeconds The amount of time to wait for the email
+ * @param timeoutInSeconds The amount of time to wait for the email. Default: 5 seconds
  */
-export async function waitForEmail(parameters: gmail_v1.Params$Resource$Users$Messages$List, timeoutInSeconds = 5) {
+export async function waitForEmail(parameters: gmail_v1.Params$Resource$Users$Messages$List, timeoutInSeconds = 5): Promise<gmail_v1.Schema$Message[]> {
     let emails = await filterEmails(parameters);
     let timePassedInSeconds = 0;
     while(emails.length === 0 && timePassedInSeconds < timeoutInSeconds) {
@@ -59,9 +59,10 @@ export async function waitForEmail(parameters: gmail_v1.Params$Resource$Users$Me
     }
     if(timePassedInSeconds >= timePassedInSeconds && emails.length === 0)
         throw new Error(`Unable to find email after ${timePassedInSeconds}/${timeoutInSeconds}`);
+    return emails;
 }
 
-export async function deleteEmail(parameters: gmail_v1.Params$Resource$Users$Messages$Delete) {
+export async function deleteEmail(parameters: gmail_v1.Params$Resource$Users$Messages$Delete): Promise<void> {
     if(parameters.userId === undefined) parameters.userId = 'me';
     await api.users.messages.delete(parameters)
 }
