@@ -14,5 +14,5 @@ jobs:
       run: curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash - && sudo apt install nodejs
     - name: Installing NPM packages
       run: npm install && npm run build
-    - name: Running unit tests
-      run: npm run unit-tests -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false
+    - name: Running tests
+      run: npm run tests -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false
