@@ -1,6 +1,6 @@
 {
   "name": "google-authenticator-util",
-  "version": "0.0.9",
+  "version": "1.0.0",
   "description": "Google authenticator tool for backend development / automation",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
