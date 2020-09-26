@@ -46,8 +46,7 @@ describe('Tests', async function() {
         expect(emails.length).to.be.greaterThan(0, 'The emails count')
     });
     it('waitForEmail', async () => {
-        await authenticator.authorizeWithToken(require(`${process.env.INIT_CWD}/tokens/${cliArguments.clientId}-token.json`))
-        const emails = await filterEmails({
+        const emails = await waitForEmail({
             auth: authenticator.oAuth2Client,
             q: emailQuery
         })
