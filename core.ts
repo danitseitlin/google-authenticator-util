@@ -136,7 +136,6 @@ export class GoogleAuthenticator {
         this.authServer.start();
         this.debug('Authenticating to get the first token')
         await this.authenticateToken(authUrl, options.username, options.password);
-        await new Promise(resolve => setTimeout(resolve, 5000 * 5));
         this.debug(`Token generation process is ${this.isTokenGenerated}`)
         return this.oAuth2Client;
     }
@@ -163,10 +162,10 @@ export class GoogleAuthenticator {
         this.debug('Filling the password');
         await page.type('input[type=password]', password);
         await page.click('#passwordNext');
-        while(this.isTokenGenerated !== true) 
-            await new Promise(resolve => setTimeout(resolve, 500))
-        await browser.close();
         this.debug(`Waiting for token generation process to be finished`)
+        while(!this.isTokenGenerated)
+            await this.sleep(0.5);
+        await browser.close();
         await browserFetcher.remove(revisionInfo.revision);
     }
 
@@ -256,6 +255,14 @@ export class GoogleAuthenticator {
             this.debug(`Directory ${directory} doesn't exists, creating it.`)
             await promises.mkdir(directory);
         }
+    }
+
+    /**
+     * Sleeping for X seconds in the code
+     * @param seconds The sleep seconds
+     */
+    private async sleep(seconds: number) {
+        await new Promise(resolve => setTimeout(resolve, seconds * 1000));
     }
 }
 
