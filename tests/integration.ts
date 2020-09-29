@@ -4,7 +4,7 @@ import { expect } from 'chai';
 let authenticator: GoogleAuthenticator;
 const emailQuery = 'subject: Security alert';
 describe('Tests', async function() {
-    this.timeout(15 * 100 * 60);
+    this.timeout(15 * 1000 * 60);
     before(async () => {
         authenticator = new GoogleAuthenticator({
             clientId: cliArguments.clientId,
