@@ -5,7 +5,12 @@ import { deleteEmail, sendEmail } from '../dir/utilities';
 let authenticator: GoogleAuthenticator;
 const scope = ['https://www.googleapis.com/auth/gmail.readonly', 'https://mail.google.com/', 'https://www.googleapis.com/auth/gmail.modify',
 'https://www.googleapis.com/auth/gmail.compose', 'https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.addons.current.action.compose']
-const emailQuery = 'subject: Security alert';
+const emailTo = 'gaunpmp@gmail.com'
+        const emailFrom = 'gaunpmp@gmail.com'
+        const emailSubject = 'Attempting to send email via package'
+        const emailMessage = 'Hello,\n this is an automatic email via the NPM package\nBest,'
+let emailQuery = 'subject: Security alert';
+let emails = []
 describe('Tests', async function() {
     this.timeout(15 * 1000 * 60);
     before(async () => {
@@ -55,8 +60,12 @@ describe('Tests', async function() {
         })
         expect(emails.length).to.be.greaterThan(0, 'The emails count')
     });
+    it('sendEmail & deleteEmail', async () => {     
+        emailQuery = `from: ${emailFrom} to: ${emailTo} subject: ${emailSubject} is:unread`
+        await sendEmail({to: emailTo, 'from': emailFrom, subject: emailSubject, message: emailMessage, auth: authenticator.oAuth2Client})
+    })
     it('getEmail', async () => {
-        const emails = await filterEmails({
+        emails = await waitForEmail({
             auth: authenticator.oAuth2Client,
             q: emailQuery
         })
@@ -65,19 +74,9 @@ describe('Tests', async function() {
             auth: authenticator.oAuth2Client,
             id: emails[0].id
         })
-        expect(email.data.raw).contains('Security alert', 'title of the email')
+        expect(email.data.raw).contains(emailSubject, 'The title of the email')
     });
-    it('sendEmail & deleteEmail', async () => {
-        const emailTo = 'gaunpmp@gmail.com'
-        const emailFrom = 'gaunpmp@gmail.com'
-        const emailSubject = 'Attempting to send email via package'
-        const emailMessage = 'Hello,\n this is an automatic email via the NPM package\nBest,'
-        const emailQuery = `from: ${emailFrom} to: ${emailTo} subject: ${emailSubject} is:unread`
-        await sendEmail({to: emailTo, 'from': emailFrom, subject: emailSubject, message: emailMessage, auth: authenticator.oAuth2Client})
-        let emails = await waitForEmail({
-            auth: authenticator.oAuth2Client,
-            q: emailQuery
-        })
+    it('deleteEmail', async () => {
         await deleteEmail({
             auth: authenticator.oAuth2Client,
             id: emails[0].threadId
