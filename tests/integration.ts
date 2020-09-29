@@ -6,9 +6,9 @@ let authenticator: GoogleAuthenticator;
 const scope = ['https://www.googleapis.com/auth/gmail.readonly', 'https://mail.google.com/', 'https://www.googleapis.com/auth/gmail.modify',
 'https://www.googleapis.com/auth/gmail.compose', 'https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/gmail.addons.current.action.compose']
 const emailTo = 'gaunpmp@gmail.com'
-        const emailFrom = 'gaunpmp@gmail.com'
-        const emailSubject = 'Attempting to send email via package'
-        const emailMessage = 'Hello,\n this is an automatic email via the NPM package\nBest,'
+const emailFrom = 'gaunpmp@gmail.com'
+const emailSubject = 'Attempting to send email via package'
+const emailMessage = 'Hello,\n this is an automatic email via the NPM package\nBest,'
 let emailQuery = 'subject: Security alert';
 let emails = []
 describe('Tests', async function() {
