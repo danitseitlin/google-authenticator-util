@@ -1,4 +1,5 @@
 import { Credentials } from 'google-auth-library';
+import { gmail_v1 } from 'googleapis';
 
 /**
  * The parameters to configure the authentication to Google
@@ -123,4 +124,24 @@ export interface Token {
 export interface FilterEmailsParameters {
     labelIds: string[]
     subject: string
+}
+
+/**
+ * The parameters of send email message
+ * @param to The email address to recieve the email
+ * @param from The email address to send the email from
+ * @param subject The subject of the email address
+ * @param message The message of the email address
+ * @param auth Auth client or API Key for the request
+ * @param userId The user's email address. The special value me can be used to indicate the authenticated user.
+ * @param requestBody Request body metadata
+ * @param media Media metadata
+ * @param media.mimeType Media mime-type
+ * @param media.body Media body contents
+ */
+export interface emailMessage extends gmail_v1.Params$Resource$Users$Messages$Send {
+    to: string,
+    from: string,
+    subject: string,
+    message: string
 }
