@@ -1,6 +1,6 @@
+export { GoogleAuthenticator } from './dir/core';
+export { filterEmails, getEmail, waitForEmail } from './dir/utilities';
 export { 
-    GoogleAuthenticator, BasicAuthentication, NewTokenAuthentication, TokenFileAuthentication, TokenAuthentication, Options, GenerateTokenParameters,
-    RedirectURIOptions, DebugOptions, Token, FilterEmailsParameters
-} from './core';
-
-export { filterEmails, getEmail, waitForEmail } from './utilities';
+    BasicAuthentication, NewTokenAuthentication, TokenFileAuthentication, TokenAuthentication, Options, GenerateTokenParameters,
+    RedirectURIOptions, DebugOptions, Token, FilterEmailsParameters 
+} from './dir/types';

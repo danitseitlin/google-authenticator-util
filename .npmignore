@@ -6,6 +6,7 @@ tests
 **/tests/*.ts
 package-lock.json
 index.ts
-core.ts
-utilities.ts
+./lib/core.ts
+./lib/utilities.ts
+./lib/types.ts
 tsconfig.json
