@@ -228,7 +228,7 @@ export class GoogleAuthenticator {
         this.debug('Setting the token');
         this.oAuth2Client.setCredentials(tokens);
         // Store the token to disk for later program executions
-        await this.verifyDirectory(options.tokenDirectory);
+        await this.createDirectory(options.tokenDirectory);
         await promises.writeFile(options.tokenFullPath, JSON.stringify(tokens));
         this.isTokenGenerated = true;
         this.authServer.stop();
@@ -244,10 +244,10 @@ export class GoogleAuthenticator {
     }
 
     /**
-     * Verifying the token directory exists
+     * Creating the token's directory
      * @param directory The directory to verify
      */
-    private async verifyDirectory(directory: string): Promise<void> {
+    private async createDirectory(directory: string): Promise<void> {
         try {
             this.debug(`Verifying directory ${directory} exists`)
             await promises.access(directory);
