@@ -25,7 +25,7 @@ jobs:
     - name: Installing NPM packages
       run: npm install && npm run build
     - name: Running tests
-      run: npm run tests -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false
+      run: npm run tests -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false --exit
     - name: Save screenshots
       if: ${{ failure() || success() }}
       uses: actions/upload-artifact@v2
