@@ -11,7 +11,7 @@ const emailSubject = 'Attempting to send email via package'
 const emailMessage = 'Hello,\n this is an automatic email via the NPM package\nBest,'
 let emailQuery = 'subject: Security alert';
 let emails = []
-describe('Tests', async function() {
+describe('Tests', function() {
     this.timeout(3 * 1000 * 60);
     before(async () => {
         authenticator = new GoogleAuthenticator({
