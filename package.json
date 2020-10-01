@@ -26,7 +26,7 @@
   "homepage": "https://github.com/danitseitlin/google-authenticator-util#readme",
   "dependencies": {
     "dmock-server": "^1.5.2",
-    "googleapis": "^50.0.0",
+    "googleapis": "^60.0.1",
     "puppeteer-core": "^5.2.1"
   },
   "devDependencies": {
