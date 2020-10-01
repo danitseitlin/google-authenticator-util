@@ -3,6 +3,13 @@ on:
   pull_request:
   push:
     branches: [master]
+on: 
+  workflow_dispatch:
+    inputs:
+      headles:
+        description: 'Log level'     
+        required: true
+        default: 'false'
 jobs:
   headless:
     runs-on: ubuntu-18.04
@@ -16,3 +23,7 @@ jobs:
       run: npm install && npm run build
     - name: Running tests
       run: npm run tests -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false
+    - uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: path/to/artifact/ # or path/to/artifact
