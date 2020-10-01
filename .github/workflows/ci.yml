@@ -3,7 +3,6 @@ on:
   pull_request:
   push:
     branches: [master]
-on: 
   workflow_dispatch:
     inputs:
       headles:
