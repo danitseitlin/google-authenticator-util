@@ -11,7 +11,7 @@ const emailSubject = 'Attempting to send email via package'
 const emailMessage = 'Hello,\n this is an automatic email via the NPM package\nBest,'
 let emailQuery = 'subject: Security alert';
 let emails = []
-describe('Tests', function() {
+describe('Tests', async function() {
     this.timeout(3 * 1000 * 60);
     before(async () => {
         authenticator = new GoogleAuthenticator({
@@ -22,69 +22,96 @@ describe('Tests', function() {
         }); 
     });
     it('authorizeWithNewToken', async () => {
-        await authenticator.authorizeWithNewToken({
-            username: cliArguments.username,
-            password: cliArguments.password,
-            scope: scope
-        })
-        const emails = await filterEmails({
-            auth: authenticator.oAuth2Client,
-            q: emailQuery
-        })
-        expect(emails.length).to.be.greaterThan(0, 'The emails count')
+        try {
+            await authenticator.authorizeWithNewToken({
+                username: cliArguments.username,
+                password: cliArguments.password,
+                scope: scope
+            })
+            const emails = await filterEmails({
+                auth: authenticator.oAuth2Client,
+                q: emailQuery
+            })
+            expect(emails.length).to.be.greaterThan(0, 'The emails count')
+        } catch (err) {
+            throw new Error(err)
+        }
     });
-
     it('authorizeWithTokenFile', async () => {
-        await authenticator.authorizeWithTokenFile({
-            name: `${cliArguments.clientId}-token.json`,
-            directory: './tokens'
-        });
-        const emails = await filterEmails({
-            auth: authenticator.oAuth2Client,
-            q: emailQuery
-        })
-        expect(emails.length).to.be.greaterThan(0, 'The emails count')
+        try {
+            await authenticator.authorizeWithTokenFile({
+                name: `${cliArguments.clientId}-token.json`,
+                directory: './tokens'
+            });
+            const emails = await filterEmails({
+                auth: authenticator.oAuth2Client,
+                q: emailQuery
+            })
+            expect(emails.length).to.be.greaterThan(0, 'The emails count')
+        } catch (err) {
+            throw new Error(err)
+        }
     });
     it('authorizeWithToken', async () => {
-        await authenticator.authorizeWithToken(require(`${process.env.INIT_CWD}/tokens/${cliArguments.clientId}-token.json`))
-        const emails = await filterEmails({
-            auth: authenticator.oAuth2Client,
-            q: emailQuery
-        })
-        expect(emails.length).to.be.greaterThan(0, 'The emails count')
+        try {
+            await authenticator.authorizeWithToken(require(`${process.env.INIT_CWD}/tokens/${cliArguments.clientId}-token.json`))
+            const emails = await filterEmails({
+                auth: authenticator.oAuth2Client,
+                q: emailQuery
+            })
+            expect(emails.length).to.be.greaterThan(0, 'The emails count')
+        } catch (err) {
+            throw new Error(err)
+        }
     });
     it('waitForEmail', async () => {
-        const emails = await waitForEmail({
-            auth: authenticator.oAuth2Client,
-            q: emailQuery
-        })
-        expect(emails.length).to.be.greaterThan(0, 'The emails count')
+        try {
+            const emails = await waitForEmail({
+                auth: authenticator.oAuth2Client,
+                q: emailQuery
+            })
+            expect(emails.length).to.be.greaterThan(0, 'The emails count')
+        } catch (err) {
+            throw new Error(err)
+        }
     });
-    it('sendEmail & deleteEmail', async () => {     
-        emailQuery = `from: ${emailFrom} to: ${emailTo} subject: ${emailSubject} is:unread`
-        await sendEmail({to: emailTo, 'from': emailFrom, subject: emailSubject, message: emailMessage, auth: authenticator.oAuth2Client})
+    it('sendEmail & deleteEmail', async () => {
+        try {
+            emailQuery = `from: ${emailFrom} to: ${emailTo} subject: ${emailSubject} is:unread`
+            await sendEmail({to: emailTo, 'from': emailFrom, subject: emailSubject, message: emailMessage, auth: authenticator.oAuth2Client})
+        } catch (err) {
+            throw new Error(err)
+        }
     })
     it('getEmail', async () => {
-        emails = await waitForEmail({
-            auth: authenticator.oAuth2Client,
-            q: emailQuery
-        })
-        expect(emails.length).to.be.greaterThan(0, 'The emails count')
-        const email = await getEmail({
-            auth: authenticator.oAuth2Client,
-            id: emails[0].id
-        })
-        expect(email.data.raw).contains(emailSubject, 'The title of the email')
+        try {
+            emails = await waitForEmail({
+                auth: authenticator.oAuth2Client,
+                q: emailQuery
+            })
+            expect(emails.length).to.be.greaterThan(0, 'The emails count')
+            const email = await getEmail({
+                auth: authenticator.oAuth2Client,
+                id: emails[0].id
+            })
+            expect(email.data.raw).contains(emailSubject, 'The title of the email')
+        } catch (err) {
+            throw new Error(err)
+        }
     });
     it('deleteEmail', async () => {
-        await deleteEmail({
-            auth: authenticator.oAuth2Client,
-            id: emails[0].threadId
-        });
-        emails = await filterEmails({
-            auth: authenticator.oAuth2Client,
-            q: emailQuery
-        })
-        expect(emails.length).to.be.equal(0, 'The emails count')
-    })
+        try {
+            await deleteEmail({
+                auth: authenticator.oAuth2Client,
+                id: emails[0].threadId
+            });
+            emails = await filterEmails({
+                auth: authenticator.oAuth2Client,
+                q: emailQuery
+            })
+            expect(emails.length).to.be.equal(0, 'The emails count')
+        } catch (err) {
+            throw new Error(err)
+        }
+    });
 });
