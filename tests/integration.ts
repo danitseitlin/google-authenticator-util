@@ -12,7 +12,7 @@ const emailMessage = 'Hello,\n this is an automatic email via the NPM package\nB
 let emailQuery = 'subject: Security alert';
 let emails = []
 describe('Tests', async function() {
-    this.timeout(15 * 1000 * 60);
+    this.timeout(3 * 1000 * 60);
     before(async () => {
         authenticator = new GoogleAuthenticator({
             clientId: cliArguments.clientId,
