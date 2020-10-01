@@ -150,7 +150,7 @@ export class GoogleAuthenticator {
     private async authenticateToken(authUrl: string, username: string, password: string): Promise<void> {
         const browserFetcher = puppeteer.createBrowserFetcher();
         const revisionInfo = await browserFetcher.download('737027');
-        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: false, args: ['--no-sandbox']});
+        const browser = await puppeteer.launch({executablePath: revisionInfo.executablePath, headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox']});
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
         //UI authentication when there is no access token.
