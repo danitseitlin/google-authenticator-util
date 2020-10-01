@@ -1,7 +1,16 @@
+#Ignoring additional dev related directories/files
 .github
 tokens
 node_modules
-tests
 package-lock.json
-index.ts
 tsconfig.json
+index.ts
+
+#Ignoring the tests directory from appearing twice
+tests
+**/tests/*.js
+**/tests/*.ts
+
+#Ignoring the dir directory from appearing twice
+dir/*.js
+dir/*.ts
