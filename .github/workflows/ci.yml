@@ -27,9 +27,9 @@ jobs:
     - name: Running tests
       run: npm run tests -- --clientId=${{secrets.CLIENTID}} --clientSecret=${{secrets.CLIENTSECRET}} --username=${{secrets.EMAIL}} --password=${{secrets.EMAILPASSWORD}} --scope=https://www.googleapis.com/auth/gmail.readonly --debug=false
     - name: Save screenshots
-    if: ${{ failure() || success() }}
-    uses: actions/upload-artifact@v2
-    with:
-      name: Upload screenshots
-      path:
-        screenshots
+      if: ${{ failure() || success() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: Upload screenshots
+        path:
+          screenshots
