@@ -21,7 +21,7 @@ describe('Tests', async function() {
             debug: (cliArguments.debug === 'true') ? true: false
         }); 
     });
-    it('authorizeWithNewToken', async (done) => {
+    it('authorizeWithNewToken', async () => {
         await authenticator.authorizeWithNewToken({
             username: cliArguments.username,
             password: cliArguments.password,
@@ -32,10 +32,9 @@ describe('Tests', async function() {
             q: emailQuery
         })
         expect(emails.length).to.be.greaterThan(0, 'The emails count')
-        done()
     });
 
-    it('authorizeWithTokenFile', async (done) => {
+    it('authorizeWithTokenFile', async () => {
         await authenticator.authorizeWithTokenFile({
             name: `${cliArguments.clientId}-token.json`,
             directory: './tokens'
@@ -45,31 +44,27 @@ describe('Tests', async function() {
             q: emailQuery
         })
         expect(emails.length).to.be.greaterThan(0, 'The emails count')
-        done()
     });
-    it('authorizeWithToken', async (done) => {
+    it('authorizeWithToken', async () => {
         await authenticator.authorizeWithToken(require(`${process.env.INIT_CWD}/tokens/${cliArguments.clientId}-token.json`))
         const emails = await filterEmails({
             auth: authenticator.oAuth2Client,
             q: emailQuery
         })
         expect(emails.length).to.be.greaterThan(0, 'The emails count')
-        done()
     });
-    it('waitForEmail', async (done) => {
+    it('waitForEmail', async () => {
         const emails = await waitForEmail({
             auth: authenticator.oAuth2Client,
             q: emailQuery
         })
         expect(emails.length).to.be.greaterThan(0, 'The emails count')
-        done()
     });
-    it('sendEmail & deleteEmail', async (done) => {     
+    it('sendEmail & deleteEmail', async () => {     
         emailQuery = `from: ${emailFrom} to: ${emailTo} subject: ${emailSubject} is:unread`
         await sendEmail({to: emailTo, 'from': emailFrom, subject: emailSubject, message: emailMessage, auth: authenticator.oAuth2Client})
-        done()
     })
-    it('getEmail', async (done) => {
+    it('getEmail', async () => {
         emails = await waitForEmail({
             auth: authenticator.oAuth2Client,
             q: emailQuery
@@ -80,9 +75,8 @@ describe('Tests', async function() {
             id: emails[0].id
         })
         expect(email.data.raw).contains(emailSubject, 'The title of the email')
-        done()
     });
-    it('deleteEmail', async (done) => {
+    it('deleteEmail', async () => {
         await deleteEmail({
             auth: authenticator.oAuth2Client,
             id: emails[0].threadId
@@ -92,6 +86,5 @@ describe('Tests', async function() {
             q: emailQuery
         })
         expect(emails.length).to.be.equal(0, 'The emails count')
-        done()
     })
 });
