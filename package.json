@@ -6,7 +6,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "mocha -r --exit ts-node/register",
+    "test": "mocha -r ts-node/register --exit",
     "tests": "npm run test tests/integration.ts"
   },
   "repository": {
