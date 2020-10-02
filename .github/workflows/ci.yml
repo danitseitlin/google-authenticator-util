@@ -29,7 +29,7 @@ jobs:
     - name: Insalling chromium headless
       run: sudo apt-get update && sudo apt-get install -y libappindicator1 fonts-liberation && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo dpkg -i google-chrome*.deb
     - name: xx
-      run: echo 'xhost +si:localuser:$USER > temp_file cat ~/.xprofile >> temp_file mv temp_file ~/.xprofile
+      run: echo 'xhost +si:localuser:$USER' > temp_file cat ~/.xprofile >> temp_file mv temp_file ~/.xprofile
     - name: Installing NPM packages
       run: npm install && npm run build
     - name: Running tests
