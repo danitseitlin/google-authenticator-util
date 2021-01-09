@@ -1,4 +1,24 @@
-# Google authenticator util  &middot; [![GitHub license](https://img.shields.io/badge/license-BSD%203%20Clause-blue.svg)](https://github.com/danitseitlin/google-authenticator-util/blob/master/LICENSE) [![npm version](http://img.shields.io/npm/v/google-authenticator-util.svg?style=flat)](https://npmjs.org/package/google-authenticator-util "View this project on npm") 
+<p align='center'>
+  <a href='https://www.npmjs.com/package/google-authenticator-util'>
+    <img src='https://img.shields.io/npm/v/google-authenticator-util/latest?style=plastic' target='_blank' />
+  </a>
+  <a href='https://npmjs.org/package/google-authenticator-util' style='width:25px;height:20px;'>
+    <img src='https://img.shields.io/npm/dm/google-authenticator-util.svg?color=blue&style=plastic' target='_blank' />
+  </a>
+  <a href='https://github.com/danitseitlin/google-authenticator-util/issues' style='width:25px;height:20px;'>
+    <img src='https://img.shields.io/github/issues/danitseitlin/google-authenticator-util?style=plastic' target='_blank' />
+  </a>
+  <a href='https://npmjs.org/package/google-authenticator-util' style='width:25px;height:20px;'>
+    <img src='https://img.shields.io/bundlephobia/min/google-authenticator-util/latest?style=plastic' target='_blank' />
+  </a>
+  <a href='https://github.com/danitseitlin/google-authenticator-util/commits/master'>
+    <img src='https://img.shields.io/github/last-commit/danitseitlin/google-authenticator-util?style=plastic' />
+  </a>
+  <a href='https://github.com/danitseitlin/google-authenticator-util/blob/master/LICENSE'>
+    <img src='https://img.shields.io/badge/license-BSD%203%20Clause-blue.svg?style=plastic' target='_blank' />
+  </a>
+</p></p>
+
 ## About
 This NodeJS module is built in order to make it easier to authenticate with google without knowing too much about how it works.
 This tool is recommended for both automation and development.
