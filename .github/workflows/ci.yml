@@ -1,8 +1,8 @@
 name: CI
 on:
   #pull_request:
-  push:
-    branches: [xxxx]
+  #push:
+  #  branches: [master]
   workflow_dispatch:
     inputs:
       headles:
