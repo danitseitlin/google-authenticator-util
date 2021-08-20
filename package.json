@@ -27,7 +27,7 @@
   "dependencies": {
     "dmock-server": "^1.5.8",
     "googleapis": "^83.0.0",
-    "puppeteer-core": "^8.0.0"
+    "puppeteer-core": "^10.2.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",
