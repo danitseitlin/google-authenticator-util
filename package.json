@@ -32,7 +32,7 @@
   "devDependencies": {
     "@types/chai": "4.2.21",
     "@types/mocha": "9.0.0",
-    "@types/node": "16.6.2",
+    "@types/node": "16.7.10",
     "@types/puppeteer-core": "2.0.0",
     "chai": "4.3.4",
     "cli-argument-parser": "0.4.8",
