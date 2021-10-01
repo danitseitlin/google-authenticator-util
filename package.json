@@ -38,6 +38,6 @@
     "cli-argument-parser": "0.4.8",
     "mocha": "9.1.0",
     "ts-node": "9.0.0",
-    "typescript": "4.3.5"
+    "typescript": "4.4.3"
   }
 }
